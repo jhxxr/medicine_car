@@ -1,9 +1,9 @@
 led\inv_mpu.o: ..\HARDWARE\MPU6050\eMPL\inv_mpu.c
-led\inv_mpu.o: E:\Keil_v5\ARM\ARMCC\Bin\..\include\stdio.h
-led\inv_mpu.o: E:\Keil_v5\ARM\ARMCC\Bin\..\include\stdint.h
-led\inv_mpu.o: E:\Keil_v5\ARM\ARMCC\Bin\..\include\stdlib.h
-led\inv_mpu.o: E:\Keil_v5\ARM\ARMCC\Bin\..\include\string.h
-led\inv_mpu.o: E:\Keil_v5\ARM\ARMCC\Bin\..\include\math.h
+led\inv_mpu.o: E:\Keil_v5\ARM\ARMCC\bin\..\include\stdio.h
+led\inv_mpu.o: E:\Keil_v5\ARM\ARMCC\bin\..\include\stdint.h
+led\inv_mpu.o: E:\Keil_v5\ARM\ARMCC\bin\..\include\stdlib.h
+led\inv_mpu.o: E:\Keil_v5\ARM\ARMCC\bin\..\include\string.h
+led\inv_mpu.o: E:\Keil_v5\ARM\ARMCC\bin\..\include\math.h
 led\inv_mpu.o: ..\HARDWARE\MPU6050\eMPL\inv_mpu.h
 led\inv_mpu.o: ../Core/Inc/stm32f1xx_it.h
 led\inv_mpu.o: ..\HARDWARE\MPU6050\eMPL\inv_mpu_dmp_motion_driver.h
@@ -23,7 +23,7 @@ led\inv_mpu.o: ../Drivers/CMSIS/Include/cmsis_armcc.h
 led\inv_mpu.o: ../Drivers/CMSIS/Device/ST/STM32F1xx/Include/system_stm32f1xx.h
 led\inv_mpu.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal.h
 led\inv_mpu.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/Legacy/stm32_hal_legacy.h
-led\inv_mpu.o: E:\Keil_v5\ARM\ARMCC\Bin\..\include\stddef.h
+led\inv_mpu.o: E:\Keil_v5\ARM\ARMCC\bin\..\include\stddef.h
 led\inv_mpu.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_rcc_ex.h
 led\inv_mpu.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_gpio.h
 led\inv_mpu.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_gpio_ex.h
