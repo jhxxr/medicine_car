@@ -74,8 +74,14 @@ float  g_fMPU6050YawMovePidOut2 = 0.00f; //第一个电机控制输出
 uint8_t delay_count_start = 0;
 extern uint16_t delay_count;
 
-uint8_t g_ucMode = 5; 
+
+
+
+
+//***************************模式控制***********************************//
+uint8_t g_ucMode = 3; 
 //小车运动模式标志位 0:显示功能、1:PID循迹模式 5:遥控角度闭环
+//***********************************************************************//
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
@@ -111,7 +117,7 @@ void MPU6050_straight(void)
 //	   //mpu_dmp_get_data(&pitch,&roll,&yaw);//返回值:0,DMP成功解出欧拉角
 //		while(mpu_dmp_get_data(&pitch,&roll,&yaw)!=0){}  //这个可以解决经常读不出数据的问题
 //		
-//		
+		while(mpu_dmp_get_data(&pitch,&roll,&yaw)!=0){} //读取数据
 		g_fMPU6050YawMovePidOut = PID_realize_angle(&pidMPU6050YawMovement,&yaw);//PID计算输出目标速度 这个速度，会和基础速度加减
 
 		g_fMPU6050YawMovePidOut1 = 1.5 + g_fMPU6050YawMovePidOut;//基础速度加减PID输出速度
@@ -129,17 +135,17 @@ void MPU6050_straight(void)
 
 /*
 *********************************************************************************************************
-*	函 数 名: 
+*	函 数 名: delay_count_examine
 *	功能说明: 计时器检查函数，每次调用开启计时，清空计数值
-*	形    参：
-*	返 回 值: 
+*	形    参：无
+*	返 回 值: 无
 *********************************************************************************************************
 */
-void delay_count_examine(void)
-{
-	delay_count = 0;
-	delay_count_start = 1;
-}
+// void delay_count_examine(void)
+// {
+// 	delay_count = 0;
+// 	delay_count_start = 1;
+// }
 
 
 
@@ -213,7 +219,30 @@ void trace_logic(void){
 }
 /*------------------------------------PID寻迹功能----------------End------------------------------------------*/
 
-
+/*
+*********************************************************************************************************
+*	函 数 名: 
+*	功能说明: MPU6050转向函数
+*	形    参：angle
+*   | 数值 |方向|
+*   |  正  |左转|
+*   |  负  |右转|
+*	返 回 值: 1
+*********************************************************************************************************
+*/
+int MPU6050_turn(int angle)
+{
+	pidMPU6050YawMovement.target_val =pidMPU6050YawMovement.target_val +angle;
+	// delay_count = 0;
+	// delay_count_start = 1;
+	while(1){
+		MPU6050_straight();//MPU6050定向行驶
+		if(pidMPU6050YawMovement.target_val==pidMPU6050YawMovement.actual_val){
+			break;
+		}
+	}
+	return 1;
+}
 
 
 
@@ -229,7 +258,7 @@ int main(void)
 {
   /* USER CODE BEGIN 1 */
 
-	uint8_t mode6_MPU6050_case = 0;  //模式六状态
+	uint8_t mode3_case = 0;  //模式3状态
 
 
   /* USER CODE END 1 */
@@ -278,7 +307,9 @@ int main(void)
   while(MPU_Init()!=0);//初始化MPU6050模块的MPU 注意初始化阶段不要移动小车
   while(mpu_dmp_init()!=0);//mpu6050,dmp初始化
 
-	delay_count_start=1;//开始计时 
+  delay_count = 0;
+  delay_count_start = 1;
+	//delay_count_start=1;//开始计时 
 	 //pidMPU6050YawMovement.target_val=180.0;
 //  cJSON *cJsonData ,*cJsonVlaue;
   /* USER CODE END 2 */
@@ -418,11 +449,61 @@ int main(void)
 
 
 	if(g_ucMode==3){
-		trace_logic();
+		
+		
+
+		switch (mode3_case)
+		{
+		case 0:
+			//trace_logic();
+			if(delay_count>=150){
+				mode3_case=1;
+			}
+			motorPidSetSpeed(2,2);
+			break;
+		case 1:
+			if(MPU6050_turn(180)==1){
+				mode3_case=0;
+			}
+
+			break;
+
+		
+
+	
+		}
 		
 	}
 
 
+	if(g_ucMode==4){
+		
+		sprintf((char *)Usart3String,"pitch:%.2f roll:%.2f yaw:%.2f\r\n",pitch,roll,yaw);//显示6050数据 俯仰角 横滚角 航向角
+		HAL_UART_Transmit(&huart3,( uint8_t *)Usart3String,strlen(( const  char  *)Usart3String),0xFFFF);//通过串口三输出字符 strlen:计算字符串大小	
+	    while(mpu_dmp_get_data(&pitch,&roll,&yaw)!=0){} //读取数据
+
+ 		// MPU6050_straight();//调用函数
+		switch (mode3_case)
+		{
+		case 0:
+			//trace_logic();
+			
+			if(delay_count>=150){
+				MPU6050_straight();//调用函数
+			}
+			motorPidSetSpeed(2,2);
+			break;
+		case 1:
+			MPU6050_turn(90);
+			mode3_case=0;
+			break;
+
+		
+
+	
+		}
+		
+	}
 
 
 
@@ -462,43 +543,43 @@ int main(void)
 	
 	}
 
-	if(g_ucMode == 6)
-	{
+// 	if(g_ucMode == 6)
+// 	{
 		
-		sprintf((char *)OledString,"y:%.2f  \r\n",yaw);//显示6050数据  航向角
-		OLED_ShowString(0,5,OledString,12);//这个是oled驱动里面的，是显示位置的一个函数，
-//	   
-	   //mpu_dmp_get_data(&pitch,&roll,&yaw);//返回值:0,DMP成功解出欧拉角
-		while(mpu_dmp_get_data(&pitch,&roll,&yaw)!=0){}  //这个可以解决经常读不出数据的问题
+// 		sprintf((char *)OledString,"y:%.2f  \r\n",yaw);//显示6050数据  航向角
+// 		OLED_ShowString(0,5,OledString,12);//这个是oled驱动里面的，是显示位置的一个函数，
+// //	   
+// 	   //mpu_dmp_get_data(&pitch,&roll,&yaw);//返回值:0,DMP成功解出欧拉角
+// 		while(mpu_dmp_get_data(&pitch,&roll,&yaw)!=0){}  //这个可以解决经常读不出数据的问题
 		
 		
-		if(delay_count==5){
-			mode6_MPU6050_case=1;
-		}
-		if(delay_count==150){
+// 		if(delay_count==5){
+// 			mode6_MPU6050_case=1;
+// 		}
+// 		if(delay_count==150){
 
-			while (delay_count_start)
+// 			while (delay_count_start)
 			
-			{
-				pidMPU6050YawMovement.target_val -= 180;//目标值
-				delay_count_start=0;//停止计时
-			} 
-			mode6_MPU6050_case=2;
-		}
+// 			{
+// 				pidMPU6050YawMovement.target_val -= 180;//目标值
+// 				delay_count_start=0;//停止计时
+// 			} 
+// 			mode6_MPU6050_case=2;
+// 		}
 
 
 
-		switch (mode6_MPU6050_case)
-		{
-		case 1:
-			motorPidSetSpeed(2,2);//直行
-			break;
-		case 2:
-			MPU6050_straight();
+// 		switch (mode6_MPU6050_case)
+// 		{
+// 		case 1:
+// 			motorPidSetSpeed(2,2);//直行
+// 			break;
+// 		case 2:
+// 			MPU6050_straight();
   
-			break;
-		}
-	}
+// 			break;
+// 		}
+// 	}
 
 
 
