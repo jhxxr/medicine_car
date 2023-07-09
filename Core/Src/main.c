@@ -111,9 +111,9 @@ void SystemClock_Config(void);
 
 void MPU6050_straight(void)
 {
-//		sprintf((char *)Usart3String,"pitch:%.2f roll:%.2f yaw:%.2f\r\n",pitch,roll,yaw);//显示6050数据 俯仰角 横滚角 航向角
-//		HAL_UART_Transmit(&huart3,( uint8_t *)Usart3String,strlen(( const  char  *)Usart3String),0xFFFF);//通过串口三输出字符 strlen:计算字符串大小	
-//	   
+		sprintf((char *)Usart3String,"pitch:%.2f roll:%.2f yaw:%.2f\r\n",pitch,roll,yaw);//显示6050数据 俯仰角 横滚角 航向角
+		HAL_UART_Transmit(&huart3,( uint8_t *)Usart3String,strlen(( const  char  *)Usart3String),0xFFFF);//通过串口三输出字符 strlen:计算字符串大小	
+	   
 //	   //mpu_dmp_get_data(&pitch,&roll,&yaw);//返回值:0,DMP成功解出欧拉角
 //		while(mpu_dmp_get_data(&pitch,&roll,&yaw)!=0){}  //这个可以解决经常读不出数据的问题
 //		
@@ -236,8 +236,17 @@ int MPU6050_turn(int angle)
 	// delay_count = 0;
 	// delay_count_start = 1;
 	while(1){
+
 		MPU6050_straight();//MPU6050定向行驶
-		if(pidMPU6050YawMovement.target_val==pidMPU6050YawMovement.actual_val){
+		sprintf((char *)OledString,"target:%.2f \r\n",pidMPU6050YawMovement.target_val);//
+		OLED_ShowString(0,1,OledString,12);//这个是oled驱动里面的，是显示位置的一个函数，
+		
+		sprintf((char *)OledString,"actual:%.2f  \r\n",yaw);//
+		OLED_ShowString(0,2,OledString,12);//这个是oled驱动里面的，是显示位置的一个函数，
+
+		
+		//pidMPU6050YawMovement.target_val约等于pidMPU6050YawMovement.actual_val
+		if(pidMPU6050YawMovement.target_val - yaw < 2 && pidMPU6050YawMovement.target_val - yaw > -2){
 			break;
 		}
 	}
@@ -456,7 +465,7 @@ int main(void)
 		{
 		case 0:
 			//trace_logic();
-			if(delay_count>=150){
+			if(delay_count==150){
 				mode3_case=1;
 			}
 			motorPidSetSpeed(2,2);
@@ -476,34 +485,31 @@ int main(void)
 	}
 
 
-	if(g_ucMode==4){
+	// if(g_ucMode==4){
 		
-		sprintf((char *)Usart3String,"pitch:%.2f roll:%.2f yaw:%.2f\r\n",pitch,roll,yaw);//显示6050数据 俯仰角 横滚角 航向角
-		HAL_UART_Transmit(&huart3,( uint8_t *)Usart3String,strlen(( const  char  *)Usart3String),0xFFFF);//通过串口三输出字符 strlen:计算字符串大小	
-	    while(mpu_dmp_get_data(&pitch,&roll,&yaw)!=0){} //读取数据
+	// 	sprintf((char *)Usart3String,"pitch:%.2f roll:%.2f yaw:%.2f\r\n",pitch,roll,yaw);//显示6050数据 俯仰角 横滚角 航向角
+	// 	HAL_UART_Transmit(&huart3,( uint8_t *)Usart3String,strlen(( const  char  *)Usart3String),0xFFFF);//通过串口三输出字符 strlen:计算字符串大小	
+	//     while(mpu_dmp_get_data(&pitch,&roll,&yaw)!=0){} //读取数据
 
- 		// MPU6050_straight();//调用函数
-		switch (mode3_case)
-		{
-		case 0:
-			//trace_logic();
+ 	// 	// MPU6050_straight();//调用函数
+	// 	switch (mode3_case)
+	// 	{
+	// 	case 0:
+	// 		//trace_logic();
 			
-			if(delay_count>=150){
-				MPU6050_straight();//调用函数
-			}
-			motorPidSetSpeed(2,2);
-			break;
-		case 1:
-			MPU6050_turn(90);
-			mode3_case=0;
-			break;
+	// 		if(delay_count>=150){
+	// 			MPU6050_straight();//调用函数
+	// 		}
+	// 		motorPidSetSpeed(2,2);
+	// 		break;
+	// 	case 1:
+	// 		MPU6050_turn(90);
+	// 		mode3_case=0;
+	// 		break;
 
+	// 	}
 		
-
-	
-		}
-		
-	}
+	// }
 
 
 
