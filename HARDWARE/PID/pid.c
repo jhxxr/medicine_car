@@ -46,7 +46,7 @@ void PID_init()
 	pidFollow.Kd = 0;
 
 	pidMPU6050YawMovement.actual_val = 0.0;
-	pidMPU6050YawMovement.target_val = 0.00; // 设定姿态目标值
+	pidMPU6050YawMovement.target_val = 180.00; // 设定姿态目标值
 	pidMPU6050YawMovement.err = 0.0;
 	pidMPU6050YawMovement.err_last = 0.0;
 	pidMPU6050YawMovement.err_sum = 0.0;
@@ -87,6 +87,7 @@ float PID_realize(tPid *pid, float actual_val)
 
 	return pid->actual_val;
 }
+//如果目标值等于360，真实值等于1，那么误差就是-359，会转一整圈，所以处理一下，如果误差大于180，就加360，如果小于-180，就减360，那么1就会变成361，就不会转一圈了
 void Handle_Over_Zero(float *set, float *ref, float T)
 {
 	if (*set - *ref > (T / 2))
@@ -98,9 +99,32 @@ void Handle_Over_Zero(float *set, float *ref, float T)
 		*ref = *ref - T;
 	}
 }
+
+void PID_target_limit(float *target)
+{
+	while (1)
+	{
+		if(*target>360)
+		{
+			*target=*target-360;
+		}
+		else if(*target<0)
+		{
+			*target=*target+360;
+		}
+		else
+		{
+			break;//
+		}
+		
+	}
+	
+}
+
+
 float PID_realize_angle(tPid *pid, float *actual_val)
 {
-
+	PID_target_limit(&pid->target_val);
 	Handle_Over_Zero(&pid->target_val,actual_val,360);
 	pid->actual_val = *actual_val;				  // 传递真实值
 	pid->err = pid->target_val - pid->actual_val; ////当前误差=目标值-真实值
@@ -113,28 +137,3 @@ float PID_realize_angle(tPid *pid, float *actual_val)
 	return pid->actual_val;
 }
 
-// PID-MPU6050控制函数
-float PID_MPU6050_realize(tPid *pid, float actual_val)
-{
-	// pid->actual_val = actual_val;//传递真实值
-	if (pid->target_val == 180 && pid->actual_val < 0)
-	{
-		pid->actual_val = -actual_val;
-	}
-	else if (pid->target_val == -180 && pid->actual_val > 0)
-	{
-		pid->actual_val = -actual_val;
-	}
-	else
-	{
-		pid->actual_val = actual_val; // 传递真实值
-	}
-	pid->err = pid->target_val - pid->actual_val; ////当前误差=目标值-真实值
-	pid->err_sum += pid->err;					  // 误差累计值 = 当前误差累计和
-	// 使用PID控制 输出 = Kp*当前误差  +  Ki*误差累计值 + Kd*(当前误差-上次误差)
-	pid->actual_val = pid->Kp * pid->err + pid->Ki * pid->err_sum + pid->Kd * (pid->err - pid->err_last);
-	// 保存上次误差: 这次误差赋值给上次误差
-	pid->err_last = pid->err;
-
-	return pid->actual_val;
-}

@@ -74,7 +74,7 @@ float  g_fMPU6050YawMovePidOut2 = 0.00f; //第一个电机控制输出
 uint8_t delay_count_start = 0;
 extern uint16_t delay_count;
 
-uint8_t g_ucMode = 6; 
+uint8_t g_ucMode = 5; 
 //小车运动模式标志位 0:显示功能、1:PID循迹模式 5:遥控角度闭环
 /* USER CODE END PM */
 
@@ -118,39 +118,105 @@ void MPU6050_straight(void)
 /*-------------MPU6050 控制代码-----------------End----------------------------------*/
 
 
-int mode6_MPU6050_stoptrun(tPid * pid)
-{
-	float target= pid->target_val;
-	float actual = pid->actual_val;
-	if(target==180||target==-180){
-		if(actual<0){
-			if(actual>=-180&&actual<=-178){
-				return 1;
-			}
-			else{
-				return 0;
-			}
+/*------------------------------------PID寻迹功能----------------Start------------------------------------------*/
+void trace_logic(void){
+	///****    红外PID循迹功能******************/
+	g_ucaHW_Read[0] = READ_HW_OUT_1;//读取红外对管状态、这样相比于写在if里面更高效
+	g_ucaHW_Read[1] = READ_HW_OUT_2;
+	g_ucaHW_Read[2] = READ_HW_OUT_3;
+	g_ucaHW_Read[3] = READ_HW_OUT_4;
 
-		}
-		else{
-			if(actual>=178&&actual<=180){
-				return 1;
-			}
-			else{
-				return 0;
-			}
-		}
-		
-	}	
-
-	else if(actual >= target-2||actual <= target+2){
-		return 1;	
+	if(g_ucaHW_Read[0] == 0&&g_ucaHW_Read[1] == 0&&g_ucaHW_Read[2] == 0&&g_ucaHW_Read[3] == 0 )
+	{
+//		printf("应该前进\r\n");//注释掉更加高效，减少无必要程序执行
+		g_cThisState = 0;//前进
 	}
-	else{
-		return 0;
+	else if(g_ucaHW_Read[0] == 0&&g_ucaHW_Read[1] == 1&&g_ucaHW_Read[2] == 0&&g_ucaHW_Read[3] == 0 )//使用else if更加合理高效
+	{
+//		printf("应该右转\r\n");
+		g_cThisState = -1;//应该右转
 	}
+	else if(g_ucaHW_Read[0] == 1&&g_ucaHW_Read[1] == 0&&g_ucaHW_Read[2] == 0&&g_ucaHW_Read[3] == 0 )
+	{
+//		printf("快速右转\r\n");
+		g_cThisState = -2;//快速右转
+	}
+	else if(g_ucaHW_Read[0] == 1&&g_ucaHW_Read[1] == 1&&g_ucaHW_Read[2] == 0&&g_ucaHW_Read[3] == 0)
+	{
+//		printf("快速右转\r\n");
+		g_cThisState = -3;//快速右转
+	}
+	else if(g_ucaHW_Read[0] == 0&&g_ucaHW_Read[1] == 0&&g_ucaHW_Read[2] == 1&&g_ucaHW_Read[3] == 0 )
+	{
+//		printf("应该左转\r\n");
+		g_cThisState = 1;//应该左转	
+	}
+	else if(g_ucaHW_Read[0] == 0&&g_ucaHW_Read[1] == 0&&g_ucaHW_Read[2] == 0&&g_ucaHW_Read[3] == 1 )
+	{
+//		printf("快速左转\r\n");
+		g_cThisState = 2;//快速左转
+	}
+	else if(g_ucaHW_Read[0] == 0&&g_ucaHW_Read[1] == 0&&g_ucaHW_Read[2] == 1&&g_ucaHW_Read[3] == 1)
+	{
+//	    printf("快速左转\r\n");
+		g_cThisState = 3;//快速左转
+	}
+	g_fHW_PID_Out = PID_realize(&pidHW_Tracking,g_cThisState);//PID计算输出目标速度 这个速度，会和基础速度加减
 
+	g_fHW_PID_Out1 = 3 + g_fHW_PID_Out;//电机1速度=基础速度+循迹PID输出速度
+	g_fHW_PID_Out2 = 3 - g_fHW_PID_Out;//电机1速度=基础速度-循迹PID输出速度
+	if(g_fHW_PID_Out1 >5) g_fHW_PID_Out1 =5;//进行限幅 限幅速度在0-5之间
+	if(g_fHW_PID_Out1 <0) g_fHW_PID_Out1 =0;
+	if(g_fHW_PID_Out2 >5) g_fHW_PID_Out2 =5;//进行限幅 限幅速度在0-5之间
+	if(g_fHW_PID_Out2 <0) g_fHW_PID_Out2 =0;
+	if(g_cThisState != g_cLastState)//如何这次状态不等于上次状态、就进行改变目标速度和控制电机、在定时器中依旧定时控制电机
+	{
+		motorPidSetSpeed(g_fHW_PID_Out1,g_fHW_PID_Out2);//通过计算的速度控制电机
+	}
+	
+	g_cLastState = g_cThisState;//保存上次红外对管状态	
 }
+/*------------------------------------PID寻迹功能----------------End------------------------------------------*/
+
+
+
+
+
+
+
+// int mode6_MPU6050_stoptrun(tPid * pid)
+// {
+// 	float target= pid->target_val;
+// 	float actual = pid->actual_val;
+// 	if(target==180||target==-180){
+// 		if(actual<0){
+// 			if(actual>=-180&&actual<=-178){
+// 				return 1;
+// 			}
+// 			else{
+// 				return 0;
+// 			}
+
+// 		}
+// 		else{
+// 			if(actual>=178&&actual<=180){
+// 				return 1;
+// 			}
+// 			else{
+// 				return 0;
+// 			}
+// 		}
+		
+// 	}	
+
+// 	else if(actual >= target-2||actual <= target+2){
+// 		return 1;	
+// 	}
+// 	else{
+// 		return 0;
+// 	}
+
+// }
 
 
 
@@ -166,7 +232,7 @@ int main(void)
 {
   /* USER CODE BEGIN 1 */
 
-	uint8_t mode6_MPU6050_case = 0;
+	uint8_t mode6_MPU6050_case = 0;  //模式六状态
 
 
   /* USER CODE END 1 */
@@ -216,7 +282,7 @@ int main(void)
   while(mpu_dmp_init()!=0);//mpu6050,dmp初始化
 
 	delay_count_start=1;//开始计时 
-	 pidMPU6050YawMovement.target_val=180.0;
+	 //pidMPU6050YawMovement.target_val=180.0;
 //  cJSON *cJsonData ,*cJsonVlaue;
   /* USER CODE END 2 */
 
@@ -351,85 +417,88 @@ int main(void)
 
 		sprintf((char *)Usart3String,"pitch:%.2f roll:%.2f yaw:%.2f\r\n",pitch,roll,yaw);//显示6050数据 俯仰角 横滚角 航向角
 		HAL_UART_Transmit(&huart3,( uint8_t *)Usart3String,strlen(( const  char  *)Usart3String),0xFFFF);//通过串口三输出字符 strlen:计算字符串大小	
-	   
+	    while(mpu_dmp_get_data(&pitch,&roll,&yaw)!=0){} //读取数据
+
+ 		MPU6050_straight();//调用函数
 
 
+	//    //mpu_dmp_get_data(&pitch,&roll,&yaw);//返回值:0,DMP成功解出欧拉角
+	// 	while(mpu_dmp_get_data(&pitch,&roll,&yaw)!=0){}  //这个可以解决经常读不出数据的问题
+		
+		
+	// 	g_fMPU6050YawMovePidOut = PID_realize(&pidMPU6050YawMovement,yaw);//PID计算输出目标速度 这个速度，会和基础速度加减
+
+	// 	g_fMPU6050YawMovePidOut1 = 1.5 + g_fMPU6050YawMovePidOut;//基础速度加减PID输出速度
+	// 	g_fMPU6050YawMovePidOut2 = 1.5 - g_fMPU6050YawMovePidOut;
+	// 	if(g_fMPU6050YawMovePidOut1 >3.5) g_fMPU6050YawMovePidOut1 =3.5;//进行限幅
+	// 	if(g_fMPU6050YawMovePidOut1 <0) g_fMPU6050YawMovePidOut1 =0;
+	// 	if(g_fMPU6050YawMovePidOut2 >3.5) g_fMPU6050YawMovePidOut2 =3.5;//进行限幅
+	// 	if(g_fMPU6050YawMovePidOut2 <0) g_fMPU6050YawMovePidOut2 =0;
+	// 	motorPidSetSpeed(g_fMPU6050YawMovePidOut1,g_fMPU6050YawMovePidOut2);//将最后计算的目标速度 通过motorPidSetSpeed控制电机
+
+	
+	}
+
+	if(g_ucMode == 6)
+	{
+		
+		sprintf((char *)OledString,"y:%.2f  \r\n",yaw);//显示6050数据  航向角
+		OLED_ShowString(0,5,OledString,12);//这个是oled驱动里面的，是显示位置的一个函数，
+//	   
 	   //mpu_dmp_get_data(&pitch,&roll,&yaw);//返回值:0,DMP成功解出欧拉角
 		while(mpu_dmp_get_data(&pitch,&roll,&yaw)!=0){}  //这个可以解决经常读不出数据的问题
 		
 		
-		g_fMPU6050YawMovePidOut = PID_realize(&pidMPU6050YawMovement,yaw);//PID计算输出目标速度 这个速度，会和基础速度加减
+		if(delay_count==5){
+			mode6_MPU6050_case=1;
+		}
+		if(delay_count==150){
 
-		g_fMPU6050YawMovePidOut1 = 1.5 + g_fMPU6050YawMovePidOut;//基础速度加减PID输出速度
-		g_fMPU6050YawMovePidOut2 = 1.5 - g_fMPU6050YawMovePidOut;
-		if(g_fMPU6050YawMovePidOut1 >3.5) g_fMPU6050YawMovePidOut1 =3.5;//进行限幅
-		if(g_fMPU6050YawMovePidOut1 <0) g_fMPU6050YawMovePidOut1 =0;
-		if(g_fMPU6050YawMovePidOut2 >3.5) g_fMPU6050YawMovePidOut2 =3.5;//进行限幅
-		if(g_fMPU6050YawMovePidOut2 <0) g_fMPU6050YawMovePidOut2 =0;
-		motorPidSetSpeed(g_fMPU6050YawMovePidOut1,g_fMPU6050YawMovePidOut2);//将最后计算的目标速度 通过motorPidSetSpeed控制电机
-	
+			while (delay_count_start)
+			
+			{
+				pidMPU6050YawMovement.target_val -= 180;//目标值
+				delay_count_start=0;//停止计时
+			} 
+			mode6_MPU6050_case=2;
+		}
+
+
+
+		switch (mode6_MPU6050_case)
+		{
+		case 1:
+			motorPidSetSpeed(2,2);//直行
+			break;
+		case 2:
+			MPU6050_straight();
+  
+			break;
+		}
 	}
 
-//	if(g_ucMode == 6)
-//	{
-//		
-//		sprintf((char *)OledString,"y:%.2f  \r\n",yaw);//显示6050数据  航向角
-//		OLED_ShowString(0,5,OledString,12);//这个是oled驱动里面的，是显示位置的一个函数，
-////	   
-//	   //mpu_dmp_get_data(&pitch,&roll,&yaw);//返回值:0,DMP成功解出欧拉角
-//		while(mpu_dmp_get_data(&pitch,&roll,&yaw)!=0){}  //这个可以解决经常读不出数据的问题
-//		
-//		
-//		if(delay_count==5){
-//			mode6_MPU6050_case=1;
-//		}
-//		if(delay_count==150){
-//			while (delay_count_start)
-//			
-//			{
-//				if(pidMPU6050YawMovement.target_val >= -180){
-//					pidMPU6050YawMovement.target_val -= 180;//目标值
-//					delay_count_start=0;//停止计时
-//				}
-//			} 
-//			mode6_MPU6050_case=2;
-//		}
 
 
-
-//		switch (mode6_MPU6050_case)
-//		{
-//		case 1:
-//			motorPidSetSpeed(3,3);//直行
-//			break;
-//		case 2:
-//			MPU6050_straight();
-//			if(mode6_MPU6050_stoptrun(&pidMPU6050YawMovement)==1){
-//				mode6_MPU6050_case=1;
-//			}
-//			break;
-//		}
-//	}
- 	if(g_ucMode==6){
-	while(mpu_dmp_get_data(&pitch,&roll,&yaw)!=0){} 
- 		//delay_count_start=1;//开始计时
- 		MPU6050_straight();//调用直行函数
-// 		if(delay_count==50)
-// 		{
-//// 			if(pidMPU6050YawMovement.target_val >= -180){
-//// 				pidMPU6050YawMovement.target_val -= 90;//目标值
-//// 			}
-// 		}
-//		
-// 		if(delay_count==350)
-// 		{
-// 			g_ucMode = 0;
-// //			delay_count=0;
-// 		}
-//		
+//  	if(g_ucMode==6){
+// 	while(mpu_dmp_get_data(&pitch,&roll,&yaw)!=0){} 
+//  		//delay_count_start=1;//开始计时
+//  		MPU6050_straight();//调用直行函数
+// // 		if(delay_count==50)
+// // 		{
+// //// 			if(pidMPU6050YawMovement.target_val >= -180){
+// //// 				pidMPU6050YawMovement.target_val -= 90;//目标值
+// //// 			}
+// // 		}
+// //		
+// // 		if(delay_count==350)
+// // 		{
+// // 			g_ucMode = 0;
+// // //			delay_count=0;
+// // 		}
+// //		
 	
 		
- 	}
+//  	}
 	
 	
 ///****    红外PID循迹功能******************/
