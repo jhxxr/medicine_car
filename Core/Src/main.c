@@ -235,7 +235,7 @@ int MPU6050_turn(int angle)
 
 		
 		//pidMPU6050YawMovement.target_val约等于pidMPU6050YawMovement.actual_val
-		if(pidMPU6050YawMovement.target_val - yaw < 2 && pidMPU6050YawMovement.target_val - yaw > -2){
+		if(pidMPU6050YawMovement.target_val - yaw < 0.5 && pidMPU6050YawMovement.target_val - yaw > -0.5){
 			break;
 		}
 	}
@@ -392,14 +392,7 @@ int main(void)
 */
 	if(g_ucMode == 1)
 	{
-		sprintf((char *)OledString,"target:%.2f \r\n",pidMPU6050YawMovement.target_val);//
-		OLED_ShowString(0,1,OledString,12);//这个是oled驱动里面的，是显示位置的一个函数，
-		
-		sprintf((char *)OledString,"actual:%.2f  \r\n",yaw);//
-		OLED_ShowString(0,2,OledString,12);//这个是oled驱动里面的，是显示位置的一个函数，
-
-		motorPidSetSpeed(2,2);
-		//trace_logic();
+		trace_logic();
 	}
 // 
 	if(g_ucMode==2){
@@ -407,9 +400,12 @@ int main(void)
 
 	}
 
-
-
 	if(g_ucMode==3){
+		motorPidSetSpeed(3,3);
+	}
+
+
+	if(g_ucMode==4){
 		
 		
 
