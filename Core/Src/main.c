@@ -59,6 +59,8 @@ float g_fHW_PID_Out1;//电机1的最后循迹PID控制速度
 float g_fHW_PID_Out2;//电机2的最后循迹PID控制速度
 
 uint8_t g_ucUsart3ReceiveData;  //保存串口三接收的数据
+uint8_t g_ucUsart2ReceiveData;  //保存串口二接收的数据
+uint8_t g_ucUsart1ReceiveData;  //保存串口一接收的数据
 
 uint8_t Usart3String[50];//串口三输出字符串使用的字符串数组
 float g_fHC_SR04_Read;//超声波传感器读取障碍物数据
@@ -79,9 +81,12 @@ extern uint16_t delay_count;
 
 
 //***************************模式控制***********************************//
-uint8_t g_ucMode = 3; 
+uint8_t g_ucMode = 0; 
 //小车运动模式标志位 0:显示功能、1:PID循迹模式 5:遥控角度闭环
 //***********************************************************************//
+
+
+
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
@@ -129,23 +134,6 @@ void MPU6050_straight(void)
 		motorPidSetSpeed(g_fMPU6050YawMovePidOut1,g_fMPU6050YawMovePidOut2);//将最后计算的目标速度 通过motorPidSetSpeed控制电机
 }
 
-/*-------------MPU6050 控制代码-----------------End----------------------------------*/
-
-
-
-/*
-*********************************************************************************************************
-*	函 数 名: delay_count_examine
-*	功能说明: 计时器检查函数，每次调用开启计时，清空计数值
-*	形    参：无
-*	返 回 值: 无
-*********************************************************************************************************
-*/
-// void delay_count_examine(void)
-// {
-// 	delay_count = 0;
-// 	delay_count_start = 1;
-// }
 
 
 
@@ -296,6 +284,7 @@ int main(void)
   MX_TIM4_Init();
   MX_ADC2_Init();
   MX_USART3_UART_Init();
+  MX_USART2_UART_Init();
   /* USER CODE BEGIN 2 */
   OLED_Init();			//初始化OLED  
   OLED_Clear()  	; 
@@ -310,7 +299,9 @@ int main(void)
   __HAL_UART_ENABLE_IT(&huart1,UART_IT_RXNE);	//开启串口1接收中断
   PID_init();//PID参数初始化
   HAL_UART_Receive_IT(&huart3,&g_ucUsart3ReceiveData,1);  //串口三接收数据
-  
+  HAL_UART_Receive_IT(&huart3,&g_ucUsart2ReceiveData,1);  //串口二接收数据
+  HAL_UART_Receive_IT(&huart3,&g_ucUsart1ReceiveData,1);  //串口一接收数据
+
   HAL_Delay(1500);//延时0.5秒 6050上电稳定后初始化
   MPU_Init(); //初始化MPU6050
   while(MPU_Init()!=0);//初始化MPU6050模块的MPU 注意初始化阶段不要移动小车
@@ -389,6 +380,7 @@ int main(void)
 		while(mpu_dmp_get_data(&pitch,&roll,&yaw)!=0){}  //这个可以解决经常读不出数据的问题
 		
 		//在显示模式电机停转 设置小车速度为0
+		HAL_UART_Transmit(&huart1, "T", 3, 50);
 		motorPidSetSpeed(0,0);
 	}
 	if(g_ucMode == 1)
