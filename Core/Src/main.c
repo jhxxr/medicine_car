@@ -478,7 +478,7 @@ int main(void)
 */
 	if (g_ucMode==10)
 	{
-		if(MPU6050_turn(90)==1){
+		if(MPU6050_turn(100)==1){
 			g_ucMode=1;
 		}
 	}
@@ -491,7 +491,7 @@ int main(void)
 */
 	if (g_ucMode==11)
 	{
-		if(MPU6050_turn(-90)==1){
+		if(MPU6050_turn(-100)==1){
 			g_ucMode=1;
 		}
 	}
