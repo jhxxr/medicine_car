@@ -417,26 +417,47 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 				g_ucMode+=1;
 			}
 		}
+    if(g_ucUsart3ReceiveData == 'L') {//左转90度
+      g_ucMode=10;
+    } 
+    if(g_ucUsart3ReceiveData == 'R') {//右转90度
+      g_ucMode=11;
+    }
+    if (g_ucUsart3ReceiveData == 'Z')//调头
+    {
+      g_ucMode=12;
+    }
+    
 		if(g_ucUsart3ReceiveData == 'K') g_ucMode=0;//设置为显示模式
 		HAL_UART_Receive_IT( &huart3,&g_ucUsart3ReceiveData, 1);//继续进行中断接收
 	  }
     if( huart == &huart1)//判断中断源
     {
-      if(g_ucUsart1ReceiveData == 'T') HAL_UART_Transmit(&huart1, "T", 3, 50);//前运动
-      if(g_ucUsart1ReceiveData == 'B') motorPidSetSpeed(-1,-1);//后运动
+      if(g_ucUsart1ReceiveData == 'L') {//左转90度
+        // while (1)
+        // {
+        //   if(MPU6050_turn(90)==1)break;
+        // } 
+      }
+      if(g_ucUsart1ReceiveData == 'R') {//右转90度
+        // while (1)
+        // {
+        //   if(MPU6050_turn(-90)==1)break;
+        // } 
+      }
       if(g_ucUsart1ReceiveData == 'C') motorPidSetSpeed(0,0);//停止
       if(g_ucUsart1ReceiveData == 'D') motorPidSetSpeed(1,2);//右边运动	
       if(g_ucUsart1ReceiveData == 'E') motorPidSetSpeed(2,1);//左边运动
       if(g_ucUsart1ReceiveData == 'F') motorPidSpeedUp();//加速
       if(g_ucUsart1ReceiveData == 'G') motorPidSpeedCut();//减速
-      if(g_ucUsart1ReceiveData == 'H')//转向90度
-      {				
-        if(pidMPU6050YawMovement.target_val <= 180)pidMPU6050YawMovement.target_val += 90;//目标值
-      }
-      if(g_ucUsart1ReceiveData == 'I')//转回90度
-      {				
-        if(pidMPU6050YawMovement.target_val >= -180)pidMPU6050YawMovement.target_val -= 90;//目标值
-          }	
+      // if(g_ucUsart1ReceiveData == 'H')//转向90度
+      // {				
+      //   if(pidMPU6050YawMovement.target_val <= 180)pidMPU6050YawMovement.target_val += 90;//目标值
+      // }
+      // if(g_ucUsart1ReceiveData == 'I')//转回90度
+      // {				
+      //   if(pidMPU6050YawMovement.target_val >= -180)pidMPU6050YawMovement.target_val -= 90;//目标值
+      //     }	
       if(g_ucUsart1ReceiveData == 'J') //改变模式
       {
         if(g_ucMode == 7) g_ucMode = 1;//g_ucMode模式是0 1 2 3 4 5 
