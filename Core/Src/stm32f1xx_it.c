@@ -54,8 +54,8 @@ float speedcar=1;
 uint16_t delay_count = 0; //延时计数器
 extern uint8_t delay_count_start;
 
-uint8_t Usart1_ReadBuf[256];	//串口1 缓冲数组
-uint8_t Usart1_ReadCount = 0;	//串口1 接收字节计数
+// uint8_t Usart1_ReadBuf[256];	//串口1 缓冲数组
+// uint8_t Usart1_ReadCount = 0;	//串口1 接收字节计数
 extern tPid pidMotor1Speed;
 extern tPid pidMotor2Speed;
 extern uint8_t g_ucUsart3ReceiveData;  //保存串口三接收的数据
@@ -295,11 +295,11 @@ void TIM4_IRQHandler(void)
 void USART1_IRQHandler(void)
 {
   /* USER CODE BEGIN USART1_IRQn 0 */
-  if(__HAL_UART_GET_FLAG(&huart1,UART_FLAG_RXNE))//判断huart1 是否读到字节
-  {
-		if(Usart1_ReadCount >= 255) Usart1_ReadCount = 0;//是否超出最大接收范围
-		HAL_UART_Receive(&huart1,&Usart1_ReadBuf[Usart1_ReadCount++],1,1000);//继续接收 Usart1_ReadCount++:地址累加
-  }
+  // if(__HAL_UART_GET_FLAG(&huart1,UART_FLAG_RXNE))//判断huart1 是否读到字节
+  // {
+	// 	if(Usart1_ReadCount >= 255) Usart1_ReadCount = 0;//是否超出最大接收范围
+	// 	HAL_UART_Receive(&huart1,&Usart1_ReadBuf[Usart1_ReadCount++],1,1000);//继续接收 Usart1_ReadCount++:地址累加
+  // }
   /* USER CODE END USART1_IRQn 0 */
   HAL_UART_IRQHandler(&huart1);
   /* USER CODE BEGIN USART1_IRQn 1 */
@@ -419,35 +419,35 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 		}
 		if(g_ucUsart3ReceiveData == 'K') g_ucMode=0;//设置为显示模式
 		HAL_UART_Receive_IT( &huart3,&g_ucUsart3ReceiveData, 1);//继续进行中断接收
-	}
-	if( huart == &huart1)//判断中断源
-	{
-		if(g_ucUsart3ReceiveData == 'A') motorPidSetSpeed(1,1);//前运动
-		if(g_ucUsart3ReceiveData == 'B') motorPidSetSpeed(-1,-1);//后运动
-		if(g_ucUsart3ReceiveData == 'C') motorPidSetSpeed(0,0);//停止
-		if(g_ucUsart3ReceiveData == 'D') motorPidSetSpeed(1,2);//右边运动	
-		if(g_ucUsart3ReceiveData == 'E') motorPidSetSpeed(2,1);//左边运动
-		if(g_ucUsart3ReceiveData == 'F') motorPidSpeedUp();//加速
-		if(g_ucUsart3ReceiveData == 'G') motorPidSpeedCut();//减速
-		if(g_ucUsart3ReceiveData == 'H')//转向90度
-		{				
-			if(pidMPU6050YawMovement.target_val <= 180)pidMPU6050YawMovement.target_val += 90;//目标值
-		}
-		if(g_ucUsart3ReceiveData == 'I')//转回90度
-		{				
-			if(pidMPU6050YawMovement.target_val >= -180)pidMPU6050YawMovement.target_val -= 90;//目标值
-        }	
-		if(g_ucUsart3ReceiveData == 'J') //改变模式
-		{
-			if(g_ucMode == 7) g_ucMode = 1;//g_ucMode模式是0 1 2 3 4 5 
-			else
-			{
-				g_ucMode+=1;
-			}
-		}
-		if(g_ucUsart3ReceiveData == 'K') g_ucMode=0;//设置为显示模式
-		HAL_UART_Receive_IT( &huart1,&g_ucUsart1ReceiveData, 1);//继续进行中断接收
-	}
+	  }
+    if( huart == &huart1)//判断中断源
+    {
+      if(g_ucUsart1ReceiveData == 'T') HAL_UART_Transmit(&huart1, "T", 3, 50);//前运动
+      if(g_ucUsart1ReceiveData == 'B') motorPidSetSpeed(-1,-1);//后运动
+      if(g_ucUsart1ReceiveData == 'C') motorPidSetSpeed(0,0);//停止
+      if(g_ucUsart1ReceiveData == 'D') motorPidSetSpeed(1,2);//右边运动	
+      if(g_ucUsart1ReceiveData == 'E') motorPidSetSpeed(2,1);//左边运动
+      if(g_ucUsart1ReceiveData == 'F') motorPidSpeedUp();//加速
+      if(g_ucUsart1ReceiveData == 'G') motorPidSpeedCut();//减速
+      if(g_ucUsart1ReceiveData == 'H')//转向90度
+      {				
+        if(pidMPU6050YawMovement.target_val <= 180)pidMPU6050YawMovement.target_val += 90;//目标值
+      }
+      if(g_ucUsart1ReceiveData == 'I')//转回90度
+      {				
+        if(pidMPU6050YawMovement.target_val >= -180)pidMPU6050YawMovement.target_val -= 90;//目标值
+          }	
+      if(g_ucUsart1ReceiveData == 'J') //改变模式
+      {
+        if(g_ucMode == 7) g_ucMode = 1;//g_ucMode模式是0 1 2 3 4 5 
+        else
+        {
+          g_ucMode+=1;
+        }
+      }
+      if(g_ucUsart1ReceiveData == 'K') g_ucMode=0;//设置为显示模式
+      HAL_UART_Receive_IT( &huart1,&g_ucUsart1ReceiveData, 1);//继续进行中断接收
+    }
 }
 
 

@@ -45,7 +45,7 @@ extern tPid pidMotor1Speed;//声明电机1PID速度控制结构体类型变量
 extern tPid pidMotor2Speed;
 extern tPid pidFollow;    //定距离跟随PID
 extern tPid pidMPU6050YawMovement;  //利用6050偏航角 进行姿态控制的PID
-extern uint8_t Usart1_ReadBuf[255];	//串口1 缓冲数组
+// extern uint8_t Usart1_ReadBuf[255];	//串口1 缓冲数组
 float p,i,d,a,b;//使用JSON时候使用的变量
 uint8_t OledString[50];//OLED显示使用的字符串数组
 extern float Mileage;//里程数
@@ -296,11 +296,11 @@ int main(void)
   HAL_TIM_Base_Start_IT(&htim4);                //开启定时器4 中断
   
   HAL_TIM_Base_Start_IT(&htim1);                //开启定时器1 中断
-  __HAL_UART_ENABLE_IT(&huart1,UART_IT_RXNE);	//开启串口1接收中断
+//   __HAL_UART_ENABLE_IT(&huart1,UART_IT_RXNE);	//开启串口1接收中断
   PID_init();//PID参数初始化
   HAL_UART_Receive_IT(&huart3,&g_ucUsart3ReceiveData,1);  //串口三接收数据
-  HAL_UART_Receive_IT(&huart3,&g_ucUsart2ReceiveData,1);  //串口二接收数据
-  HAL_UART_Receive_IT(&huart3,&g_ucUsart1ReceiveData,1);  //串口一接收数据
+  HAL_UART_Receive_IT(&huart2,&g_ucUsart2ReceiveData,1);  //串口二接收数据
+  HAL_UART_Receive_IT(&huart1,&g_ucUsart1ReceiveData,1);  //串口一接收数据
 
   HAL_Delay(1500);//延时0.5秒 6050上电稳定后初始化
   MPU_Init(); //初始化MPU6050
@@ -380,7 +380,7 @@ int main(void)
 		while(mpu_dmp_get_data(&pitch,&roll,&yaw)!=0){}  //这个可以解决经常读不出数据的问题
 		
 		//在显示模式电机停转 设置小车速度为0
-		HAL_UART_Transmit(&huart1, "T", 3, 50);
+		
 		motorPidSetSpeed(0,0);
 	}
 	if(g_ucMode == 1)

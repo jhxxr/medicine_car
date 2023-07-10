@@ -22,9 +22,9 @@
 
 /* USER CODE BEGIN 0 */
 typedef struct __FILE FILE;
-extern uint8_t Usart1_ReadBuf[255];	//串口1 缓冲数组
-extern uint8_t Usart1_ReadCount;	//串口1 接收字节计数
-
+// extern uint8_t Usart1_ReadBuf[255];	//串口1 缓冲数组
+// extern uint8_t Usart1_ReadCount;	//串口1 接收字节计数
+extern uint8_t g_ucUsart1ReceiveData;
 
 /* USER CODE END 0 */
 
@@ -295,24 +295,24 @@ int fputc(int ch,FILE *stream)
 	HAL_UART_Transmit(&huart1,( uint8_t *)&ch,1,0xFFFF);//huart1更换为其他串口就会重定向到其他串口
 	return ch;
 }
-//判断否接收完一帧数据
-uint8_t Usart_WaitReasFinish(void)
-{
-	static uint16_t Usart_LastReadCount = 0;//记录上次的计数值
-	if(Usart1_ReadCount == 0)
-	{
-		Usart_LastReadCount = 0;//清除计数值
-		return 1;//表示没有在接收数据
-	}
-	if(Usart1_ReadCount == Usart_LastReadCount)//如果这次计数值等于上次计数值
-	{
-		Usart1_ReadCount = 0;//接收完成清除计数值
-		Usart_LastReadCount = 0;//清除上次计数值
-		return 0;//已经接收完成了
-	}
-	Usart_LastReadCount = Usart1_ReadCount;//这次计数值赋值给上次计数值
-	return 2;//表示正在接受中
-}
+// //判断否接收完一帧数据
+// uint8_t Usart_WaitReasFinish(void)
+// {
+// 	static uint16_t Usart_LastReadCount = 0;//记录上次的计数值
+// 	if(Usart1_ReadCount == 0)
+// 	{
+// 		Usart_LastReadCount = 0;//清除计数值
+// 		return 1;//表示没有在接收数据
+// 	}
+// 	if(Usart1_ReadCount == Usart_LastReadCount)//如果这次计数值等于上次计数值
+// 	{
+// 		Usart1_ReadCount = 0;//接收完成清除计数值
+// 		Usart_LastReadCount = 0;//清除上次计数值
+// 		return 0;//已经接收完成了
+// 	}
+// 	Usart_LastReadCount = Usart1_ReadCount;//这次计数值赋值给上次计数值
+// 	return 2;//表示正在接受中
+// }
 
 
 /* USER CODE END 1 */
