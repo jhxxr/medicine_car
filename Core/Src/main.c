@@ -75,15 +75,16 @@ float  g_fMPU6050YawMovePidOut2 = 0.00f; //第一个电机控制输出
 
 uint8_t delay_count_start = 0;
 extern uint16_t delay_count;
-uint8_t turn_left=0;
-uint8_t turn_right=0;
-uint8_t turn_half=0;
+uint8_t turn_left=1;
+uint8_t turn_right=1;
+uint8_t turn_half=1;
+uint8_t Drug_flag=0;
 //#define Drug_testing HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_14);
 //#define green_light HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_15);
 //#define red_light HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_14);
 
 //***************************模式控制***********************************//
-uint8_t g_ucMode = 0; 
+uint8_t g_ucMode = 6; 
 //小车运动模式标志位 0:显示功能、1:PID循迹模式 5:遥控角度闭环
 //***********************************************************************//
 
@@ -462,6 +463,74 @@ int main(void)
 		}
 		
 	}
+	/*
+*********************************************************************************************************
+*	模    式  : 4
+*	功能说明: 数值显示
+*********************************************************************************************************
+*/
+	if(g_ucMode == 4)
+	{
+ 
+
+	//0LED显示功能
+//		sprintf((char*)OledString, "V1:%.2fV2:%.2f", Motor1Speed,Motor2Speed);//显示速度
+//		OLED_ShowString(0,0,OledString,12);//这个是oled驱动里面的，是显示位置的一个函数，
+		
+		sprintf((char*)OledString, "Mileage:%.2f", Mileage);//显示里程
+		OLED_ShowString(0,1,OledString,12);//这个是oled驱动里面的，是显示位置的一个函数，
+//		
+//		sprintf((char*)OledString, "U:%.2fV", adcGetBatteryVoltage());//显示电池电压
+//		OLED_ShowString(0,2,OledString,12);//这个是oled驱动里面的，是显示位置的一个函数，
+//		
+//		sprintf((char *)OledString,"HC_SR04:%.2fcm\r\n",HC_SR04_Read());//显示超声波数据
+//		OLED_ShowString(0,3,OledString,12);//这个是oled驱动里面的，是显示位置的一个函数，
+//		
+//		sprintf((char *)OledString,"p:%.2f r:%.2f \r\n",pitch,roll);//显示6050数据 俯仰角 横滚角
+//		OLED_ShowString(0,4,OledString,12);//这个是oled驱动里面的，是显示位置的一个函数，
+//		
+//		sprintf((char *)OledString,"y:%.2f  \r\n",yaw);//显示6050数据  航向角
+//		OLED_ShowString(0,5,OledString,12);//这个是oled驱动里面的，是显示位置的一个函数，
+		
+	//蓝牙APP显示
+//		sprintf((char*)Usart3String, "V1:%.2fV2:%.2f", Motor1Speed,Motor2Speed);//显示速度
+//		HAL_UART_Transmit(&huart3,( uint8_t *)Usart3String,strlen(( const  char  *)Usart3String),50);//阻塞式发送通过串口三输出字符 strlen:计算字符串大小
+//		//阻塞方式发送可以保证数据发送完毕，中断发送不一定可以保证数据已经发送完毕才启动下一次发送
+//		sprintf((char*)Usart3String, "Mileage:%.2f", Mileage);//显示里程
+//		HAL_UART_Transmit(&huart3,( uint8_t *)Usart3String,strlen(( const  char  *)Usart3String),50);//阻塞式发送通过串口三输出字符 strlen:计算字符串大小
+//		
+//		sprintf((char*)Usart3String, "U:%.2fV", adcGetBatteryVoltage());//显示电池电压
+//		HAL_UART_Transmit(&huart3,( uint8_t *)Usart3String,strlen(( const  char  *)Usart3String),50);//阻塞式发送通过串口三输出字符 strlen:计算字符串大小
+//		
+//		sprintf((char *)Usart3String,"HC_SR04:%.2fcm\r\n",HC_SR04_Read());//显示超声波数据
+//		HAL_UART_Transmit(&huart3,( uint8_t *)Usart3String,strlen(( const  char  *)Usart3String),50);//阻塞式发送通过串口三输出字符 strlen:计算字符串大小
+//		
+//		sprintf((char *)Usart3String,"p:%.2f r:%.2f \r\n",pitch,roll);//显示6050数据 俯仰角 横滚角
+//		HAL_UART_Transmit(&huart3,( uint8_t *)Usart3String,strlen(( const  char  *)Usart3String),50);//阻塞式发送通过串口三输出字符 strlen:计算字符串大小
+//		
+//		sprintf((char *)Usart3String,"y:%.2f  \r\n",yaw);//显示6050数据  航向角
+//		HAL_UART_Transmit(&huart3,( uint8_t *)Usart3String,strlen(( const  char  *)Usart3String),50);//阻塞式发送通过串口三输出字符 strlen:计算字符串大小
+//	
+		//获得6050数据
+//		while(mpu_dmp_get_data(&pitch,&roll,&yaw)!=0){}  //这个可以解决经常读不出数据的问题
+		
+		//在显示模式电机停转 设置小车速度为0
+	
+   while((HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_14)==1));
+
+		
+	
+}
+		
+		
+			
+
+		
+	
+	
+
+	
+	
 
 
 
@@ -505,12 +574,18 @@ int main(void)
 */
 if(g_ucMode == 6)
 {
-	if(Mileage==0){
-	   while(!(HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_14)==0));//等待装药品
-		trace_logic();
+	sprintf((char*)OledString, "Mileage:%.2f", Mileage);//显示里程
+		OLED_ShowString(0,1,OledString,12);//这个是oled驱动里面的，是显示位置的一个函数，
+   if(HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_14)==0)
+   {
+	Drug_flag=1;
+   }
+    if(Drug_flag==0){
+		motorPidSetSpeed(0,0);
 	}
-
-	if(Mileage>0&&Mileage<100){
+   if(Drug_flag==1)
+   {
+	if(Mileage<100){
 	trace_logic();
 	}
 	if((Mileage==100)&&(turn_left==1)){
@@ -520,11 +595,11 @@ if(g_ucMode == 6)
 			
 		}
 	}
-	if(Mileage>100&&Mileage<180){
+	if(Mileage>100&&Mileage<170){
 		trace_logic();
 	}
 		
-	if(Mileage>180&&turn_half==1){
+	if(Mileage>170&&turn_half==1){
 		motorPidSetSpeed(0,0);
 		HAL_GPIO_WritePin (GPIOB, GPIO_PIN_14, GPIO_PIN_SET);//亮红灯
 		while(!(HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_14)==1));//等待拿药品
@@ -532,15 +607,15 @@ if(g_ucMode == 6)
 		HAL_Delay(200);
 		if(MPU6050_turn(180)==1){
 		 turn_half=0;//转180度
-		}
-		if(Mileage>180&&turn_half==0){
+		}}
+		if(Mileage>170&&turn_half==0){
 			trace_logic();
 			if(trace_ccrossroad()==1&&turn_right==1){
 				if(MPU6050_turn(-100)==1){
 			turn_right=0;
 		}}}
 				
-		if(Mileage>180&&turn_half==0&&turn_right==0){
+		if(Mileage>170&&turn_half==0&&turn_right==0){
 				trace_logic();
 			if(trace_ccrossroad()==1){
 				motorPidSetSpeed(0,0);
@@ -569,32 +644,33 @@ if(g_ucMode == 6)
 			
 		}
 	}
-	if(Mileage>100&&Mileage<180){
+	if(Mileage>100&&Mileage<170){
 		trace_logic();
 	}
 		
-	if(Mileage>180&&turn_half==1){
+	if(Mileage>170&&turn_half==1){
 		motorPidSetSpeed(0,0);
 		HAL_GPIO_WritePin (GPIOB, GPIO_PIN_14, GPIO_PIN_SET);//亮红灯
 		while(!(HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_14)==1));//等待拿药品
 		HAL_GPIO_WritePin (GPIOB, GPIO_PIN_14, GPIO_PIN_RESET);
 		HAL_Delay(200);
-		if(MPU6050_turn(180)==1){
+		if(MPU6050_turn(180)==1)
+			{
 		 turn_half=0;//转180度
-		}
-		if(Mileage>180&&turn_half==0){
+		}}
+		if(Mileage>170&&turn_half==0){
 			trace_logic();
 			if(trace_ccrossroad()==1&&turn_left==1){
 				if(MPU6050_turn(100)==1){
 			turn_left=0;
 		}}}
 				
-		if(Mileage>180&&turn_half==0&&turn_left==0){
+		if(Mileage>170&&turn_half==0&&turn_left==0){
 				trace_logic();
 			if(trace_ccrossroad()==1){
 				motorPidSetSpeed(0,0);
 				HAL_GPIO_WritePin (GPIOC, GPIO_PIN_15, GPIO_PIN_SET);//亮绿灯
-			}}}}
+			}}}
 
 
 /*
