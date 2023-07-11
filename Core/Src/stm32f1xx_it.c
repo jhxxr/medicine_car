@@ -67,6 +67,9 @@ float Mileage;//里程数 单位cm
 
 extern tPid pidMPU6050YawMovement;  //利用6050偏航角 进行姿态控制的PID参数
 extern uint8_t g_ucMode;//当前模式变量
+extern uint8_t turn_left;
+extern uint8_t turn_right;
+extern uint8_t turn_half;
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
@@ -431,6 +434,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 		if(g_ucUsart3ReceiveData == 'K') g_ucMode=0;//设置为显示模式
 		HAL_UART_Receive_IT( &huart3,&g_ucUsart3ReceiveData, 1);//继续进行中断接收
 	  }
+	
     if( huart == &huart1)//判断中断源
     {
       if(g_ucUsart1ReceiveData == 'L') {//左转90度
@@ -445,11 +449,24 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
         //   if(MPU6050_turn(-90)==1)break;
         // } 
       }
+			
       if(g_ucUsart1ReceiveData == 'C') motorPidSetSpeed(0,0);//停止
       if(g_ucUsart1ReceiveData == 'D') motorPidSetSpeed(1,2);//右边运动	
       if(g_ucUsart1ReceiveData == 'E') motorPidSetSpeed(2,1);//左边运动
       if(g_ucUsart1ReceiveData == 'F') motorPidSpeedUp();//加速
       if(g_ucUsart1ReceiveData == 'G') motorPidSpeedCut();//减速
+			if(g_ucUsart1ReceiveData == 'A') {
+				g_ucMode=6;
+				turn_left=1;
+				turn_right=1;
+				turn_half=1;
+			}
+			if(g_ucUsart1ReceiveData == 'B') {
+				g_ucMode=7;
+				turn_left=1;
+				turn_right=1;
+				turn_half=1;
+			}
       // if(g_ucUsart1ReceiveData == 'H')//转向90度
       // {				
       //   if(pidMPU6050YawMovement.target_val <= 180)pidMPU6050YawMovement.target_val += 90;//目标值

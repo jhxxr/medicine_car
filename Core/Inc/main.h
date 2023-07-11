@@ -59,6 +59,10 @@ void Error_Handler(void);
 /* Private defines -----------------------------------------------------------*/
 #define LED_Pin GPIO_PIN_13
 #define LED_GPIO_Port GPIOC
+#define HW_OUT_5_Pin GPIO_PIN_14
+#define HW_OUT_5_GPIO_Port GPIOC
+#define Green_light_Pin GPIO_PIN_15
+#define Green_light_GPIO_Port GPIOC
 #define HW_OUT_1_Pin GPIO_PIN_5
 #define HW_OUT_1_GPIO_Port GPIOA
 #define HC_SR04_Echo_Pin GPIO_PIN_6
@@ -73,6 +77,8 @@ void Error_Handler(void);
 #define OLED_SDA_GPIO_Port GPIOB
 #define AIN1_Pin GPIO_PIN_13
 #define AIN1_GPIO_Port GPIOB
+#define Red_light_Pin GPIO_PIN_14
+#define Red_light_GPIO_Port GPIOB
 #define KEY2_Pin GPIO_PIN_12
 #define KEY2_GPIO_Port GPIOA
 #define KEY2_EXTI_IRQn EXTI15_10_IRQn
