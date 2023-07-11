@@ -18,6 +18,7 @@
 
 #include "cJSON.h"
 #include <string.h>
+#include <stdio.h>
 #include "HC_SR04.h"
 
 
@@ -79,6 +80,7 @@ uint8_t turn_left=1;
 uint8_t turn_right=1;
 uint8_t turn_half=1;
 uint8_t Drug_flag=0;
+
 //#define Drug_testing HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_14);
 //#define green_light HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_15);
 //#define red_light HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_14);
@@ -152,12 +154,14 @@ int trace_ccrossroad(void)
 	g_ucaHW_Read[2] = READ_HW_OUT_3;
 	g_ucaHW_Read[3] = READ_HW_OUT_4;
 	if(g_ucaHW_Read[0] == 1&&g_ucaHW_Read[1] == 1&&g_ucaHW_Read[2] == 1&&g_ucaHW_Read[3] == 1 ){return 1;}//1111
-	if(g_ucaHW_Read[0] == 1&&g_ucaHW_Read[1] == 0&&g_ucaHW_Read[2] == 1&&g_ucaHW_Read[3] == 1 ){return 1;}//1011
-	if(g_ucaHW_Read[0] == 1&&g_ucaHW_Read[1] == 1&&g_ucaHW_Read[2] == 0&&g_ucaHW_Read[3] == 1 ){return 1;}//1101
-	if(g_ucaHW_Read[0] == 1&&g_ucaHW_Read[1] == 0&&g_ucaHW_Read[2] == 0&&g_ucaHW_Read[3] == 1 ){return 1;}//1001
-	if(g_ucaHW_Read[0] == 0&&g_ucaHW_Read[1] == 1&&g_ucaHW_Read[2] == 1&&g_ucaHW_Read[3] == 0 ){return 1;}//0110
-	if(g_ucaHW_Read[0] == 1&&g_ucaHW_Read[1] == 1&&g_ucaHW_Read[2] == 1&&g_ucaHW_Read[3] == 0 ){return 1;}//1110
-	if(g_ucaHW_Read[0] == 0&&g_ucaHW_Read[1] == 1&&g_ucaHW_Read[2] == 1&&g_ucaHW_Read[3] == 1 ){return 1;}//0111
+	else if(g_ucaHW_Read[0] == 1&&g_ucaHW_Read[1] == 0&&g_ucaHW_Read[2] == 1&&g_ucaHW_Read[3] == 1 ){return 1;}//1011
+	else if(g_ucaHW_Read[0] == 1&&g_ucaHW_Read[1] == 1&&g_ucaHW_Read[2] == 0&&g_ucaHW_Read[3] == 1 ){return 1;}//1101
+	else if(g_ucaHW_Read[0] == 1&&g_ucaHW_Read[1] == 0&&g_ucaHW_Read[2] == 0&&g_ucaHW_Read[3] == 1 ){return 1;}//1001
+	else if(g_ucaHW_Read[0] == 0&&g_ucaHW_Read[1] == 1&&g_ucaHW_Read[2] == 1&&g_ucaHW_Read[3] == 0 ){return 1;}//0110
+	else if(g_ucaHW_Read[0] == 1&&g_ucaHW_Read[1] == 1&&g_ucaHW_Read[2] == 1&&g_ucaHW_Read[3] == 0 ){return 1;}//1110
+	else if(g_ucaHW_Read[0] == 0&&g_ucaHW_Read[1] == 1&&g_ucaHW_Read[2] == 1&&g_ucaHW_Read[3] == 1 ){return 1;}//0111
+	else 
+		return 0;
 //	if(g_ucaHW_Read[0] == 0&&g_ucaHW_Read[1] == 0&&g_ucaHW_Read[2] == 1&&g_ucaHW_Read[3] == 0 ){return 1;}//0011
 //	if(g_ucaHW_Read[0] == 1&&g_ucaHW_Read[1] == 1&&g_ucaHW_Read[2] == 0&&g_ucaHW_Read[3] == 0 ){return 1;}//1100
 }
@@ -283,7 +287,7 @@ int main(void)
   /* USER CODE BEGIN 1 */
 
 	uint8_t mode3_case = 0;  //模式3状态
-
+//  uint8_t  adc=READ_HW_OUT_5;
 
   /* USER CODE END 1 */
 
@@ -333,7 +337,8 @@ int main(void)
   MPU_Init(); //初始化MPU6050
   while(MPU_Init()!=0);//初始化MPU6050模块的MPU 注意初始化阶段不要移动小车
   while(mpu_dmp_init()!=0);//mpu6050,dmp初始化
-
+  while(READ_HW_OUT_5==1);//等待放药品
+	 HAL_Delay(1000);
   delay_count = 0;
   delay_count_start = 1;
 
@@ -516,7 +521,13 @@ int main(void)
 		
 		//在显示模式电机停转 设置小车速度为0
 	
-   while((HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_14)==1));
+//   if(HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_14)==1){
+		 motorPidSetSpeed(2,2);
+//	 }
+//	  if(HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_14)==0){
+//		 motorPidSetSpeed(0,0);
+//	 }
+	
 
 		
 	
@@ -572,23 +583,56 @@ int main(void)
 *	功能说明: 识别数字1
 *********************************************************************************************************
 */
+// if(g_ucMode == 6)
+// {
+// 	sprintf((char*)OledString, "Mileage:%.2f", Mileage);//显示里程
+// 	OLED_ShowString(0,1,OledString,12);//这个是oled驱动里面的，是显示位置的一个函数，
+// 	sprintf((char *)OledString,"y:%.2f  \r\n",yaw);//显示6050数据  航向角
+// 	OLED_ShowString(0,5,OledString,12);//这个是oled驱动里面的，是显示位置的一个函数，
+// 	if(Mileage<100){
+// 	motorPidSetSpeed(2,2);
+// 	}
+// 	if((Mileage>100)&&(turn_left==1)){
+// 		if(MPU6050_turn(-100)==1)
+// 	  {
+// 		turn_left=0;
+			
+// 		}
+// 	}
+// 	if(Mileage>100&&Mileage<170){
+// 		motorPidSetSpeed(2,2);
+// 	}
+		
+// 	if(Mileage>170&&turn_half==1){
+// 		motorPidSetSpeed(0,0);
+// 		HAL_GPIO_WritePin (GPIOB, GPIO_PIN_14, GPIO_PIN_SET);//亮红灯
+// 		while(READ_HW_OUT_5==0);//等待拿药品
+// 		HAL_GPIO_WritePin (GPIOB, GPIO_PIN_14, GPIO_PIN_RESET);
+// 		HAL_Delay(200);
+// 		if(MPU6050_turn(180)==1){
+// 		 turn_half=0;//转180度
+// 		}}
+// 		if(Mileage>170&&turn_half==0){
+// 			motorPidSetSpeed(2,2);
+// 			if(trace_ccrossroad()==1&&turn_right==1){
+// 				if(MPU6050_turn(100)==1){
+// 			turn_right=0;
+// 		}}}
+				
+// 		if(Mileage>170&&turn_half==0&&turn_right==0){
+// 				trace_logic();
+// 			if(trace_ccrossroad()==1){
+// 				motorPidSetSpeed(0,0);
+// 				HAL_GPIO_WritePin (GPIOC, GPIO_PIN_15, GPIO_PIN_SET);//亮绿灯
+// 			}}}
 if(g_ucMode == 6)
 {
 	sprintf((char*)OledString, "Mileage:%.2f", Mileage);//显示里程
-		OLED_ShowString(0,1,OledString,12);//这个是oled驱动里面的，是显示位置的一个函数，
-   if(HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_14)==0)
-   {
-	Drug_flag=1;
-   }
-    if(Drug_flag==0){
-		motorPidSetSpeed(0,0);
-	}
-   if(Drug_flag==1)
-   {
+	OLED_ShowString(0,1,OledString,12);//这个是oled驱动里面的，是显示位置的一个函数，
 	if(Mileage<100){
 	trace_logic();
 	}
-	if((Mileage==100)&&(turn_left==1)){
+	if((Mileage==100)&&(turn_left==1)){//左转
 		if(MPU6050_turn(100)==1)
 	  {
 		turn_left=0;
@@ -608,7 +652,7 @@ if(g_ucMode == 6)
 		if(MPU6050_turn(180)==1){
 		 turn_half=0;//转180度
 		}}
-		if(Mileage>170&&turn_half==0){
+		if(Mileage>170&&turn_half==0){//拿药后，返回，加右转
 			trace_logic();
 			if(trace_ccrossroad()==1&&turn_right==1){
 				if(MPU6050_turn(-100)==1){
@@ -620,7 +664,7 @@ if(g_ucMode == 6)
 			if(trace_ccrossroad()==1){
 				motorPidSetSpeed(0,0);
 				HAL_GPIO_WritePin (GPIOC, GPIO_PIN_15, GPIO_PIN_SET);//亮绿灯
-			}}}}
+			}}}
 		/*
 *********************************************************************************************************
 *	模    式  : 7

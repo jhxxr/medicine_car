@@ -37,6 +37,7 @@ extern "C" {
 #define READ_HW_OUT_2   HAL_GPIO_ReadPin(HW_OUT_2_GPIO_Port,HW_OUT_2_Pin)
 #define READ_HW_OUT_3   HAL_GPIO_ReadPin(HW_OUT_3_GPIO_Port,HW_OUT_3_Pin)
 #define READ_HW_OUT_4   HAL_GPIO_ReadPin(HW_OUT_4_GPIO_Port,HW_OUT_4_Pin)
+#define READ_HW_OUT_5   HAL_GPIO_ReadPin(HW_OUT_5_GPIO_Port,HW_OUT_5_Pin)
 /* USER CODE END Private defines */
 
 void MX_GPIO_Init(void);
