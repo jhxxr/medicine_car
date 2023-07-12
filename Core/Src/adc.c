@@ -119,16 +119,16 @@ void HAL_ADC_MspDeInit(ADC_HandleTypeDef* adcHandle)
 
 /* USER CODE BEGIN 1 */
 /*******************
-*  @brief  µç³ØµçÑ¹²âÁ¿¼ÆËãº¯Êý
-*  @param  ÎÞ
-*  @return Ð¡³µµç³ØµçÑ¹
+*  @brief  ï¿½ï¿½Øµï¿½Ñ¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ãº¯ï¿½ï¿?
+*  @param  ï¿½ï¿½
+*  @return Ð¡ï¿½ï¿½ï¿½ï¿½Øµï¿½Ñ?
 *
 *******************/
 float adcGetBatteryVoltage(void)
 {
-	HAL_ADC_Start(&hadc2);//Æô¶¯ADC×ª»¯
-	if(HAL_OK == HAL_ADC_PollForConversion(&hadc2,50))//µÈ´ý×ª»¯Íê³É¡¢³¬Ê±Ê±¼ä50ms
-		return (float)HAL_ADC_GetValue(&hadc2)/4096*3.3*5;//¼ÆËãµç³ØµçÑ¹
+	HAL_ADC_Start(&hadc2);//ï¿½ï¿½ï¿½ï¿½ADC×ªï¿½ï¿½
+	if(HAL_OK == HAL_ADC_PollForConversion(&hadc2,50))//ï¿½È´ï¿½×ªï¿½ï¿½ï¿½ï¿½É¡ï¿½ï¿½ï¿½Ê±Ê±ï¿½ï¿?50ms
+		return (float)HAL_ADC_GetValue(&hadc2)/4096*3.3*5;//ï¿½ï¿½ï¿½ï¿½ï¿½Øµï¿½Ñ¹
 	
 	return -1;
 }

@@ -18,6 +18,7 @@
 
 #include "cJSON.h"
 #include <string.h>
+#include <stdio.h>
 #include "HC_SR04.h"
 
 
@@ -75,13 +76,18 @@ float  g_fMPU6050YawMovePidOut2 = 0.00f; //第一个电机控制输出
 
 uint8_t delay_count_start = 0;
 extern uint16_t delay_count;
+uint8_t turn_left=1;
+uint8_t turn_right=1;
+uint8_t turn_half=1;
+uint8_t flag=0;
+uint8_t k210_turn=5;
 
-
-
-
+//#define Drug_testing HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_14);
+//#define green_light HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_15);
+//#define red_light HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_14);
 
 //***************************模式控制***********************************//
-uint8_t g_ucMode = 1; 
+uint8_t g_ucMode = 7; 
 //小车运动模式标志位 0:显示功能、1:PID循迹模式 5:遥控角度闭环
 //***********************************************************************//
 
@@ -114,7 +120,7 @@ void SystemClock_Config(void);
 *********************************************************************************************************
 */
 
-void MPU6050_straight(void)
+void MPU6050_straight(float speed)
 {
 		sprintf((char *)Usart3String,"pitch:%.2f roll:%.2f yaw:%.2f\r\n",pitch,roll,yaw);//显示6050数据 俯仰角 横滚角 航向角
 		HAL_UART_Transmit(&huart3,( uint8_t *)Usart3String,strlen(( const  char  *)Usart3String),0xFFFF);//通过串口三输出字符 strlen:计算字符串大小	
@@ -125,16 +131,29 @@ void MPU6050_straight(void)
 		while(mpu_dmp_get_data(&pitch,&roll,&yaw)!=0){} //读取数据
 		g_fMPU6050YawMovePidOut = PID_realize_angle(&pidMPU6050YawMovement,&yaw);//PID计算输出目标速度 这个速度，会和基础速度加减
 
-		g_fMPU6050YawMovePidOut1 = 1.5 + g_fMPU6050YawMovePidOut;//基础速度加减PID输出速度
-		g_fMPU6050YawMovePidOut2 = 1.5 - g_fMPU6050YawMovePidOut;
-		if(g_fMPU6050YawMovePidOut1 >3.5) g_fMPU6050YawMovePidOut1 =3.5;//进行限幅
-		if(g_fMPU6050YawMovePidOut1 <0) g_fMPU6050YawMovePidOut1 =0;
-		if(g_fMPU6050YawMovePidOut2 >3.5) g_fMPU6050YawMovePidOut2 =3.5;//进行限幅
-		if(g_fMPU6050YawMovePidOut2 <0) g_fMPU6050YawMovePidOut2 =0;
+		g_fMPU6050YawMovePidOut1 = speed + g_fMPU6050YawMovePidOut;//基础速度加减PID输出速度
+		g_fMPU6050YawMovePidOut2 = speed - g_fMPU6050YawMovePidOut;
+		if(g_fMPU6050YawMovePidOut1 >3) g_fMPU6050YawMovePidOut1 =3;//进行限幅
+		if(g_fMPU6050YawMovePidOut1 <-3) g_fMPU6050YawMovePidOut1 =-3;
+		if(g_fMPU6050YawMovePidOut2 >3) g_fMPU6050YawMovePidOut2 =3;//进行限幅
+		if(g_fMPU6050YawMovePidOut2 <-3) g_fMPU6050YawMovePidOut2 =-3;
 		motorPidSetSpeed(g_fMPU6050YawMovePidOut1,g_fMPU6050YawMovePidOut2);//将最后计算的目标速度 通过motorPidSetSpeed控制电机
 }
 
-
+/*
+*********************************************************************************************************
+*	函 数 名: trace_ccrossroad
+*	功能说明: 数字1，2循迹识别交叉路口
+*	形    参：无
+*	返 回 值: 1
+*********************************************************************************************************
+*/
+int trace_ccrossroad(void)
+{
+	if(g_ucaHW_Read[0]+g_ucaHW_Read[1]+g_ucaHW_Read[2]+g_ucaHW_Read[3] >=2  ){return 1;}
+	else return 0;
+	
+}
 
 
 
@@ -218,7 +237,7 @@ void trace_logic(void){
 *	返 回 值: 1
 *********************************************************************************************************
 */
-int MPU6050_turn(int angle)
+int MPU6050_turn(int angle,float speed)
 {
 	pidMPU6050YawMovement.target_val =yaw+angle;
 	//pidMPU6050YawMovement.target_val =pidMPU6050YawMovement.target_val +angle;
@@ -226,7 +245,7 @@ int MPU6050_turn(int angle)
 	// delay_count_start = 1;
 	while(1){
 
-		MPU6050_straight();//MPU6050定向行驶
+		MPU6050_straight(speed);//MPU6050定向行驶
 		sprintf((char *)OledString,"target:%.2f \r\n",pidMPU6050YawMovement.target_val);//
 		OLED_ShowString(0,1,OledString,12);//这个是oled驱动里面的，是显示位置的一个函数，
 		
@@ -235,7 +254,7 @@ int MPU6050_turn(int angle)
 
 		
 		//pidMPU6050YawMovement.target_val约等于pidMPU6050YawMovement.actual_val
-		if(pidMPU6050YawMovement.target_val - yaw < 2 && pidMPU6050YawMovement.target_val - yaw > -2){
+		if(pidMPU6050YawMovement.target_val - yaw < 1 && pidMPU6050YawMovement.target_val - yaw > -1){
 			break;
 		}
 	}
@@ -257,7 +276,10 @@ int main(void)
   /* USER CODE BEGIN 1 */
 
 	uint8_t mode3_case = 0;  //模式3状态
-
+	uint8_t mode6_case = 0;  //模式3状态
+	uint8_t mode7_case = 0;  //模式3状态
+	uint8_t mode8_case = 0;  //模式3状态
+//  uint8_t  adc=READ_HW_OUT_5;
 
   /* USER CODE END 1 */
 
@@ -307,9 +329,13 @@ int main(void)
   MPU_Init(); //初始化MPU6050
   while(MPU_Init()!=0);//初始化MPU6050模块的MPU 注意初始化阶段不要移动小车
   while(mpu_dmp_init()!=0);//mpu6050,dmp初始化
-
+  while(g_ucMode==0);//等待K210识别数字
+  while(READ_HW_OUT_5==1);//等待放药品
+	 HAL_Delay(1000);
   delay_count = 0;
   delay_count_start = 1;
+
+	
 	//delay_count_start=1;//开始计时 
 	 //pidMPU6050YawMovement.target_val=180.0;
 //  cJSON *cJsonData ,*cJsonVlaue;
@@ -398,8 +424,8 @@ int main(void)
 		sprintf((char *)OledString,"actual:%.2f  \r\n",yaw);//
 		OLED_ShowString(0,2,OledString,12);//这个是oled驱动里面的，是显示位置的一个函数，
 
-		motorPidSetSpeed(2,2);
-		//trace_logic();
+//		motorPidSetSpeed(2,2);
+		trace_logic();
 	}
 // 
 	if(g_ucMode==2){
@@ -423,7 +449,7 @@ int main(void)
 			motorPidSetSpeed(2,2);
 			break;
 		case 1:
-			if(MPU6050_turn(180)==1){
+			if(MPU6050_turn(180,0)==1){
 				mode3_case=0;
 			}
 
@@ -435,10 +461,73 @@ int main(void)
 		}
 		
 	}
+	/*
+*********************************************************************************************************
+*	模    式  : 4
+*	功能说明: 数值显示
+*********************************************************************************************************
+*/
+	if(g_ucMode == 4)
+	{
+ 
 
+	//0LED显示功能
+//		sprintf((char*)OledString, "V1:%.2fV2:%.2f", Motor1Speed,Motor2Speed);//显示速度
+//		OLED_ShowString(0,0,OledString,12);//这个是oled驱动里面的，是显示位置的一个函数，
+		
+		sprintf((char*)OledString, "Mileage:%.2f", Mileage);//显示里程
+		OLED_ShowString(0,1,OledString,12);//这个是oled驱动里面的，是显示位置的一个函数，
+//		
+//		sprintf((char*)OledString, "U:%.2fV", adcGetBatteryVoltage());//显示电池电压
+//		OLED_ShowString(0,2,OledString,12);//这个是oled驱动里面的，是显示位置的一个函数，
+//		
+//		sprintf((char *)OledString,"HC_SR04:%.2fcm\r\n",HC_SR04_Read());//显示超声波数据
+//		OLED_ShowString(0,3,OledString,12);//这个是oled驱动里面的，是显示位置的一个函数，
+//		
+//		sprintf((char *)OledString,"p:%.2f r:%.2f \r\n",pitch,roll);//显示6050数据 俯仰角 横滚角
+//		OLED_ShowString(0,4,OledString,12);//这个是oled驱动里面的，是显示位置的一个函数，
+//		
+//		sprintf((char *)OledString,"y:%.2f  \r\n",yaw);//显示6050数据  航向角
+//		OLED_ShowString(0,5,OledString,12);//这个是oled驱动里面的，是显示位置的一个函数，
+		
+	//蓝牙APP显示
+//		sprintf((char*)Usart3String, "V1:%.2fV2:%.2f", Motor1Speed,Motor2Speed);//显示速度
+//		HAL_UART_Transmit(&huart3,( uint8_t *)Usart3String,strlen(( const  char  *)Usart3String),50);//阻塞式发送通过串口三输出字符 strlen:计算字符串大小
+//		//阻塞方式发送可以保证数据发送完毕，中断发送不一定可以保证数据已经发送完毕才启动下一次发送
+//		sprintf((char*)Usart3String, "Mileage:%.2f", Mileage);//显示里程
+//		HAL_UART_Transmit(&huart3,( uint8_t *)Usart3String,strlen(( const  char  *)Usart3String),50);//阻塞式发送通过串口三输出字符 strlen:计算字符串大小
+//		
+//		sprintf((char*)Usart3String, "U:%.2fV", adcGetBatteryVoltage());//显示电池电压
+//		HAL_UART_Transmit(&huart3,( uint8_t *)Usart3String,strlen(( const  char  *)Usart3String),50);//阻塞式发送通过串口三输出字符 strlen:计算字符串大小
+//		
+//		sprintf((char *)Usart3String,"HC_SR04:%.2fcm\r\n",HC_SR04_Read());//显示超声波数据
+//		HAL_UART_Transmit(&huart3,( uint8_t *)Usart3String,strlen(( const  char  *)Usart3String),50);//阻塞式发送通过串口三输出字符 strlen:计算字符串大小
+//		
+//		sprintf((char *)Usart3String,"p:%.2f r:%.2f \r\n",pitch,roll);//显示6050数据 俯仰角 横滚角
+//		HAL_UART_Transmit(&huart3,( uint8_t *)Usart3String,strlen(( const  char  *)Usart3String),50);//阻塞式发送通过串口三输出字符 strlen:计算字符串大小
+//		
+//		sprintf((char *)Usart3String,"y:%.2f  \r\n",yaw);//显示6050数据  航向角
+//		HAL_UART_Transmit(&huart3,( uint8_t *)Usart3String,strlen(( const  char  *)Usart3String),50);//阻塞式发送通过串口三输出字符 strlen:计算字符串大小
+//	
+		//获得6050数据
+//		while(mpu_dmp_get_data(&pitch,&roll,&yaw)!=0){}  //这个可以解决经常读不出数据的问题
+		
+		//在显示模式电机停转 设置小车速度为0
+	
+//   if(HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_14)==1){
+		 motorPidSetSpeed(2,2);
+//	 }
+//	  if(HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_14)==0){
+//		 motorPidSetSpeed(0,0);
+//	 }
+	
 
-
-
+		
+	
+}
+		
+		
+		
 /*
 *********************************************************************************************************
 *	模    式  : 5
@@ -453,7 +542,7 @@ int main(void)
 		HAL_UART_Transmit(&huart3,( uint8_t *)Usart3String,strlen(( const  char  *)Usart3String),0xFFFF);//通过串口三输出字符 strlen:计算字符串大小	
 	    while(mpu_dmp_get_data(&pitch,&roll,&yaw)!=0){} //读取数据
 
- 		MPU6050_straight();//调用函数
+ 		MPU6050_straight(2);//调用函数
 
 
 	//    //mpu_dmp_get_data(&pitch,&roll,&yaw);//返回值:0,DMP成功解出欧拉角
@@ -468,10 +557,515 @@ int main(void)
 	// 	if(g_fMPU6050YawMovePidOut1 <0) g_fMPU6050YawMovePidOut1 =0;
 	// 	if(g_fMPU6050YawMovePidOut2 >3.5) g_fMPU6050YawMovePidOut2 =3.5;//进行限幅
 	// 	if(g_fMPU6050YawMovePidOut2 <0) g_fMPU6050YawMovePidOut2 =0;
-	// 	motorPidSetSpeed(g_fMPU6050YawMovePidOut1,g_fMPU6050YawMovePidOut2);//将最后计算的目标速度 通过motorPidSetSpeed控制电机
-
-	
+	// 	motorPidSetSpeed(g_fMPU6050YawMovePidOut1,g_fMPU6050YawMovePidOut2);//将最后计算的目标速度 通过motorPidSetSpeed控制电机	
 	}
+/*
+*********************************************************************************************************
+*	模    式  : 6
+*	功能说明: 识别数字1
+*********************************************************************************************************
+*/
+	if(g_ucMode == 6){
+		sprintf((char*)OledString, "Mileage:%.2f", Mileage);//显示里程
+		OLED_ShowString(0,1,OledString,12);//这个是oled驱动里面的，是显示位置的一个函数，
+	
+			
+			switch (mode6_case)
+			{
+			case 0:
+				motorPidSetSpeed(2, 2);
+				mode6_case = 1;
+				break;
+			case 1:
+				trace_logic();
+				if (trace_ccrossroad() == 1)
+				{
+					mode6_case = 2;
+					turn_left = 1;
+				}
+				break;
+			case 2:
+				if (turn_left == 1)
+				{
+					if (MPU6050_turn(90,2) == 1)
+					{
+						turn_left = 0;
+						mode6_case = 3;
+					}
+				}
+				break;
+			case 3:
+				trace_logic();
+				if (trace_ccrossroad() == 1)
+				{
+					mode6_case = 4;
+					turn_half = 1;
+					
+				}
+				break;
+			case 4:
+
+				if (turn_half == 1)
+				{
+
+					if (MPU6050_turn(180,0) == 1)
+					{
+						turn_half = 0;
+						mode6_case = 5;
+						motorPidSetSpeed(0, 0);
+					}
+
+				}
+
+				break;
+			case 5:
+				while (READ_HW_OUT_5==0)
+				{
+					
+				}
+				motorPidSetSpeed(2,2);
+				mode6_case = 6;
+			case 6:
+
+				trace_logic();
+				if (trace_ccrossroad() == 1)
+				{
+					mode6_case = 7;
+					turn_right = 1;
+				}
+				break;
+			case 7:
+				if (turn_right == 1)
+				{
+					if (MPU6050_turn(90,2) == 1)
+					{
+						turn_right = 0;
+						mode6_case = 8;
+					}
+				}
+				break;
+			case 8:
+				trace_logic();
+				if (trace_ccrossroad() == 1)
+				{
+					mode6_case = 9;
+					turn_half = 1;
+				}
+			case 9:
+				if (turn_half == 1)
+				{
+					if (MPU6050_turn(180,0) == 1)
+					{
+						turn_half = 0;
+						motorPidSetSpeed(0,0);
+					}
+				}
+				break;
+			default:
+				break;
+			}
+	}
+	/*
+*********************************************************************************************************
+*	模    式  : 7
+*	功能说明: 识别数字2
+*********************************************************************************************************
+*/
+
+	if(g_ucMode == 7){
+		sprintf((char*)OledString, "Mileage:%.2f", Mileage);//显示里程
+		OLED_ShowString(0,1,OledString,12);//这个是oled驱动里面的，是显示位置的一个函数，
+	
+			
+			switch (mode7_case)
+			{
+			case 0:
+				motorPidSetSpeed(2, 2);
+				mode7_case = 1;
+				break;
+			case 1:
+				trace_logic();
+				if (trace_ccrossroad() == 1)
+				{
+					mode7_case = 2;
+					turn_left = 1;
+				}
+				break;
+			case 2:
+				if (turn_left == 1)
+				{
+					if (MPU6050_turn(-90,2) == 1)
+					{
+						turn_left = 0;
+						mode7_case = 3;
+					}
+				}
+				break;
+			case 3:
+				trace_logic();
+				if (trace_ccrossroad() == 1)
+				{
+					mode7_case = 4;
+					turn_half = 1;
+					
+				}
+				break;
+			case 4:
+
+				if (turn_half == 1)
+				{
+
+					if (MPU6050_turn(180,0) == 1)
+					{
+						turn_half = 0;
+						mode7_case = 5;
+						motorPidSetSpeed(0, 0);
+					}
+
+				}
+
+				break;
+			case 5:
+				while (READ_HW_OUT_5==0)
+				{
+					
+				}
+				motorPidSetSpeed(2,2);
+				mode7_case = 6;
+			case 6:
+
+				trace_logic();
+				if (trace_ccrossroad() == 1)
+				{
+					mode7_case = 7;
+					turn_right = 1;
+				}
+				break;
+			case 7:
+				if (turn_right == 1)
+				{
+					if (MPU6050_turn(-90,2) == 1)
+					{
+						turn_right = 0;
+						mode7_case = 8;
+					}
+				}
+				break;
+			case 8:
+				trace_logic();
+				if (trace_ccrossroad() == 1)
+				{
+					mode7_case = 9;
+					turn_half = 1;
+				}
+			case 9:
+				if (turn_half == 1)
+				{
+					if (MPU6050_turn(180,0) == 1)
+					{
+						turn_half = 0;
+						motorPidSetSpeed(0,0);
+					}
+				}
+				break;
+			default:
+				break;
+			}
+	}
+
+
+/*
+if(g_ucMode == 6)
+{
+	sprintf((char*)OledString, "Mileage:%.2f", Mileage);//显示里程
+	OLED_ShowString(0,1,OledString,12);//这个是oled驱动里面的，是显示位置的一个函数，
+	if(Mileage<100){
+	trace_logic();
+	}
+	if((Mileage==100)&&(turn_left==1)){//左转
+		if(MPU6050_turn(100)==1)
+	  {
+		turn_left=0;
+			
+		}
+	}
+	if(Mileage>100&&Mileage<170){
+		trace_logic();
+	}
+		
+	if(Mileage>170&&turn_half==1){
+		motorPidSetSpeed(0,0);
+		HAL_GPIO_WritePin (GPIOB, GPIO_PIN_14, GPIO_PIN_SET);//亮红灯
+		while(!(HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_14)==1));//等待拿药品
+		HAL_GPIO_WritePin (GPIOB, GPIO_PIN_14, GPIO_PIN_RESET);
+		HAL_Delay(200);
+		if(MPU6050_turn(180)==1){
+		 turn_half=0;//转180度
+		}}
+		if(Mileage>170&&turn_half==0){//拿药后，返回，加右转
+			trace_logic();
+			if(trace_ccrossroad()==1&&turn_right==1){
+				if(MPU6050_turn(-100)==1){
+			turn_right=0;
+		}}}
+				
+		if(Mileage>170&&turn_half==0&&turn_right==0){
+				trace_logic();
+			if(trace_ccrossroad()==1){
+				motorPidSetSpeed(0,0);
+				HAL_GPIO_WritePin (GPIOC, GPIO_PIN_15, GPIO_PIN_SET);//亮绿灯
+			}}}
+			*/
+
+// 		/*
+// *********************************************************************************************************
+// *	模    式  : 7
+// *	功能说明: 识别数字2
+// *********************************************************************************************************
+// */
+// 	if(g_ucMode == 7)
+// {
+// 	if(Mileage==0){
+// 	   while(!(HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_14)==0));//等待装药品
+// 		trace_logic();
+// 	}
+
+// 	if(Mileage>0&&Mileage<100){
+// 	trace_logic();
+// 	}
+// 	if((Mileage==100)&&(turn_right==1)){
+// 		if(MPU6050_turn(-100)==1)
+// 	  {
+// 		turn_right=0;
+			
+// 		}
+// 	}
+// 	if(Mileage>100&&Mileage<170){
+// 		trace_logic();
+// 	}
+		
+// 	if(Mileage>170&&turn_half==1){
+// 		motorPidSetSpeed(0,0);
+// 		HAL_GPIO_WritePin (GPIOB, GPIO_PIN_14, GPIO_PIN_SET);//亮红灯
+// 		while(!(HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_14)==1));//等待拿药品
+// 		HAL_GPIO_WritePin (GPIOB, GPIO_PIN_14, GPIO_PIN_RESET);
+// 		HAL_Delay(200);
+// 		if(MPU6050_turn(180)==1)
+// 			{
+// 		 turn_half=0;//转180度
+// 		}
+// 		}
+// 		if(Mileage>170&&turn_half==0){
+// 			trace_logic();
+// 			if(trace_ccrossroad()==1&&turn_left==1){
+// 				if(MPU6050_turn(100)==1){
+// 			turn_left=0;
+// 		}}}
+				
+// 		if(Mileage>170&&turn_half==0&&turn_left==0){
+// 				trace_logic();
+// 			if(trace_ccrossroad()==1){
+// 				motorPidSetSpeed(0,0);
+// 				HAL_GPIO_WritePin (GPIOC, GPIO_PIN_15, GPIO_PIN_SET);//亮绿灯
+// 			}}}
+					/*
+*********************************************************************************************************
+*	模    式  : 8
+*	功能说明: 识别中端房、远端房
+*********************************************************************************************************
+*/
+			if(g_ucMode == 8){
+				switch(mode8_case)
+				{
+					case 0:
+						motorPidSetSpeed(2, 2);
+						mode8_case=1;
+						break;
+					
+					case 1:
+											
+					      trace_logic();
+			            if(trace_ccrossroad()==1&&Mileage>150)//跳过第一个十字路口
+						{
+						if(k210_turn==0){
+							mode8_case=11;//中端：k210给左判断
+               turn_left=1;    
+						}
+						
+						else if(k210_turn==1){
+							mode8_case=21;//中端：k210给右判断
+							 turn_right=1; 
+						}						
+						else{
+						mode8_case=31;//远端
+				        						
+						}}						
+					    break;	
+						
+					
+					// /*******************************  中端左边  ******************************************/
+					case 11:
+                  if(turn_left==1){
+								if(MPU6050_turn(-90,2)==1)
+								{
+									turn_left=0;
+									mode8_case=12;				
+								}}
+								break;
+					case 12:
+					        trace_logic();
+				        if (trace_ccrossroad() == 1)
+								{
+									mode8_case = 13;
+									turn_half = 1;									
+									// motorPidSetSpeed(0, 0);
+									HAL_GPIO_WritePin (GPIOB, GPIO_PIN_14, GPIO_PIN_SET);//亮红灯
+								}
+								break;
+					case 13:
+						
+						if (turn_half == 1)
+						{
+
+							if (MPU6050_turn(180,0) == 1)
+							{
+								turn_half = 0;
+								
+							}
+
+						}
+						while (READ_HW_OUT_5==0)
+						{
+						
+						}
+						HAL_GPIO_WritePin (GPIOB, GPIO_PIN_14, GPIO_PIN_RESET);	
+						mode8_case = 14;					
+						break;
+					case 14: 
+							trace_logic();
+						if (trace_ccrossroad() == 1)
+						{
+							mode8_case = 15;
+							turn_right = 1;
+						}
+						break;
+					case 15:
+						if (turn_right == 1)
+							{
+								if (MPU6050_turn(-90,2) == 1)
+								{
+									turn_right = 0;
+									mode8_case = 16;
+									Mileage=0;
+								}
+							}
+							break;
+					case 16:
+					       trace_logic();
+					     if (trace_ccrossroad() == 1&&Mileage>200)//跳过第一个十字路口
+							{
+								mode8_case = 17;
+								turn_half = 1;
+							}
+					case 17:
+							if (turn_half == 1)
+							{
+								if (MPU6050_turn(180,0) == 1)
+								{
+									turn_half = 0;
+									motorPidSetSpeed(0,0);
+								}
+							}
+							break;
+						
+				    /*******************************  中端右边  ******************************************/
+					case 21:
+                              if(turn_right==1){
+								if(MPU6050_turn(90,2)==1)
+								{
+									turn_right=0;
+									mode8_case=22;				
+								}}
+								break;
+					case 22:
+					        trace_logic();
+				        if (trace_ccrossroad() == 1)
+								{
+									mode8_case = 23;
+									turn_half = 1;									
+									// motorPidSetSpeed(0, 0);
+									HAL_GPIO_WritePin (GPIOB, GPIO_PIN_14, GPIO_PIN_SET);//亮红灯
+								}
+								break;
+					case 23:
+						
+						if (turn_half == 1)
+						{
+
+							if (MPU6050_turn(180,0) == 1)
+							{
+								turn_half = 0;
+								
+							}
+
+						}
+						while (READ_HW_OUT_5==0)//等待取药
+						{
+						
+						}
+						HAL_GPIO_WritePin (GPIOB, GPIO_PIN_14, GPIO_PIN_RESET);	
+						mode8_case = 24;					
+						break;
+					case 24: 
+							trace_logic();
+						if (trace_ccrossroad() == 1)
+						{
+							mode8_case = 25;
+							turn_left = 1;
+						}
+						break;
+					case 25:
+						if (turn_left == 1)
+							{
+								if (MPU6050_turn(90,2) == 1)
+								{
+									turn_left = 0;
+									mode8_case = 26;
+									Mileage=0;
+								}
+							}
+							break;
+					case 26:
+					       trace_logic();
+					     if (trace_ccrossroad() == 1&&Mileage>200)//跳过第一个十字路口
+							{
+								mode8_case = 27;
+								turn_half = 1;
+							}
+					case 27:
+							if (turn_half == 1)
+							{
+								if (MPU6050_turn(180,0) == 1)
+								{
+									turn_half = 0;
+									motorPidSetSpeed(0,0);
+								}
+							}
+							break;
+					default:
+							break;
+
+ 
+
+
+					
+						     
+								
+							
+
+				
+				}}	
+			
 
 
 /*
@@ -482,7 +1076,7 @@ int main(void)
 */
 	if (g_ucMode==10)
 	{
-		if(MPU6050_turn(90)==1){
+		if(MPU6050_turn(100,2)==1){
 			g_ucMode=1;
 		}
 	}
@@ -495,7 +1089,7 @@ int main(void)
 */
 	if (g_ucMode==11)
 	{
-		if(MPU6050_turn(-90)==1){
+		if(MPU6050_turn(-100,2)==1){
 			g_ucMode=1;
 		}
 	}
@@ -508,7 +1102,7 @@ int main(void)
 */
 	if (g_ucMode==12)
 	{
-		if(MPU6050_turn(180)==1){
+		if(MPU6050_turn(180,0)==1){
 			g_ucMode=1;
 		}
 	}
