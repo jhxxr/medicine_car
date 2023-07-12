@@ -131,12 +131,12 @@ void MPU6050_straight(void)
 		while(mpu_dmp_get_data(&pitch,&roll,&yaw)!=0){} //读取数据
 		g_fMPU6050YawMovePidOut = PID_realize_angle(&pidMPU6050YawMovement,&yaw);//PID计算输出目标速度 这个速度，会和基础速度加减
 
-		g_fMPU6050YawMovePidOut1 = 1.5 + g_fMPU6050YawMovePidOut;//基础速度加减PID输出速度
-		g_fMPU6050YawMovePidOut2 = 1.5 - g_fMPU6050YawMovePidOut;
-		if(g_fMPU6050YawMovePidOut1 >3.5) g_fMPU6050YawMovePidOut1 =3.5;//进行限幅
-		if(g_fMPU6050YawMovePidOut1 <0) g_fMPU6050YawMovePidOut1 =0;
-		if(g_fMPU6050YawMovePidOut2 >3.5) g_fMPU6050YawMovePidOut2 =3.5;//进行限幅
-		if(g_fMPU6050YawMovePidOut2 <0) g_fMPU6050YawMovePidOut2 =0;
+		g_fMPU6050YawMovePidOut1 = 1 + g_fMPU6050YawMovePidOut;//基础速度加减PID输出速度
+		g_fMPU6050YawMovePidOut2 = 1 - g_fMPU6050YawMovePidOut;
+		if(g_fMPU6050YawMovePidOut1 >3) g_fMPU6050YawMovePidOut1 =3;//进行限幅
+		if(g_fMPU6050YawMovePidOut1 <-3) g_fMPU6050YawMovePidOut1 =-3;
+		if(g_fMPU6050YawMovePidOut2 >3) g_fMPU6050YawMovePidOut2 =3;//进行限幅
+		if(g_fMPU6050YawMovePidOut2 <-3) g_fMPU6050YawMovePidOut2 =-3;
 		motorPidSetSpeed(g_fMPU6050YawMovePidOut1,g_fMPU6050YawMovePidOut2);//将最后计算的目标速度 通过motorPidSetSpeed控制电机
 }
 
@@ -150,21 +150,8 @@ void MPU6050_straight(void)
 */
 int trace_ccrossroad(void)
 {
-	g_ucaHW_Read[0] = READ_HW_OUT_1;
-	g_ucaHW_Read[1] = READ_HW_OUT_2;
-	g_ucaHW_Read[2] = READ_HW_OUT_3;
-	g_ucaHW_Read[3] = READ_HW_OUT_4;
-	if(g_ucaHW_Read[0] == 1&&g_ucaHW_Read[1] == 1&&g_ucaHW_Read[2] == 1&&g_ucaHW_Read[3] == 1 ){return 1;}//1111
-	else if(g_ucaHW_Read[0] == 1&&g_ucaHW_Read[1] == 0&&g_ucaHW_Read[2] == 1&&g_ucaHW_Read[3] == 1 ){return 1;}//1011
-	else if(g_ucaHW_Read[0] == 1&&g_ucaHW_Read[1] == 1&&g_ucaHW_Read[2] == 0&&g_ucaHW_Read[3] == 1 ){return 1;}//1101
-	else if(g_ucaHW_Read[0] == 1&&g_ucaHW_Read[1] == 0&&g_ucaHW_Read[2] == 0&&g_ucaHW_Read[3] == 1 ){return 1;}//1001
-	else if(g_ucaHW_Read[0] == 0&&g_ucaHW_Read[1] == 1&&g_ucaHW_Read[2] == 1&&g_ucaHW_Read[3] == 0 ){return 1;}//0110
-	else if(g_ucaHW_Read[0] == 1&&g_ucaHW_Read[1] == 1&&g_ucaHW_Read[2] == 1&&g_ucaHW_Read[3] == 0 ){return 1;}//1110
-	else if(g_ucaHW_Read[0] == 0&&g_ucaHW_Read[1] == 1&&g_ucaHW_Read[2] == 1&&g_ucaHW_Read[3] == 1 ){return 1;}//0111
-	else if(g_ucaHW_Read[0] == 0&&g_ucaHW_Read[1] == 0&&g_ucaHW_Read[2] == 1&&g_ucaHW_Read[3] == 0 ){return 1;}//0011
-	else if(g_ucaHW_Read[0] == 1&&g_ucaHW_Read[1] == 1&&g_ucaHW_Read[2] == 0&&g_ucaHW_Read[3] == 0 ){return 1;}//1100
-	else 
-		return 0;
+	if(g_ucaHW_Read[0]+g_ucaHW_Read[1]+g_ucaHW_Read[2]+g_ucaHW_Read[3] >=2  ){return 1;}
+	else return 0;
 	
 }
 
@@ -267,7 +254,7 @@ int MPU6050_turn(int angle)
 
 		
 		//pidMPU6050YawMovement.target_val约等于pidMPU6050YawMovement.actual_val
-		if(pidMPU6050YawMovement.target_val - yaw < 2 && pidMPU6050YawMovement.target_val - yaw > -2){
+		if(pidMPU6050YawMovement.target_val - yaw < 1.5 && pidMPU6050YawMovement.target_val - yaw > -1.5){
 			break;
 		}
 	}
@@ -289,6 +276,7 @@ int main(void)
   /* USER CODE BEGIN 1 */
 
 	uint8_t mode3_case = 0;  //模式3状态
+	uint8_t mode6_case = 0;  //模式3状态
 //  uint8_t  adc=READ_HW_OUT_5;
 
   /* USER CODE END 1 */
@@ -579,37 +567,124 @@ if(g_ucMode == 6){
 	sprintf((char*)OledString, "Mileage:%.2f", Mileage);//显示里程
 	OLED_ShowString(0,1,OledString,12);//这个是oled驱动里面的，是显示位置的一个函数，
 	
-			trace_logic();
-			while(trace_ccrossroad()==0);
-			if(turn_left==1){
-			  if(MPU6050_turn(100)==1)
+			
+			switch (mode6_case)
+			{
+			case 0:
+				motorPidSetSpeed(2, 2);
+				mode6_case = 1;
+				break;
+			case 1:
+				trace_logic();
+				if (trace_ccrossroad() == 1)
 				{
-				 turn_left=0;				
-				}}
-				  while(turn_left==1)
-						;
-				   trace_logic();
-				   while(trace_ccrossroad()==0);
-				   if(turn_half==1){
-					   if(MPU6050_turn(180)==1){
-						   turn_half=0;						   	
-	                    }
-						}
-						while(turn_half==1)
-							;
-						 trace_logic();
-						 while(trace_ccrossroad()==0);
-						 if(turn_right==1){
-						  if(MPU6050_turn(100)==1)
-								{
-									turn_right=0;				
-								}}
-								while(turn_right==1);//判断是否转成功
-								trace_logic();
-								while(trace_ccrossroad()==0);
-								motorPidSetSpeed(0,0);
-								HAL_GPIO_WritePin (GPIOC, GPIO_PIN_15, GPIO_PIN_SET);//亮绿灯
-								while(1);
+					mode6_case = 2;
+					turn_left = 1;
+				}
+				break;
+			case 2:
+				if (turn_left == 1)
+				{
+					if (MPU6050_turn(86) == 1)
+					{
+						turn_left = 0;
+						mode6_case = 3;
+					}
+				}
+				break;
+			case 3:
+				trace_logic();
+				if (trace_ccrossroad() == 1)
+				{
+					mode6_case = 4;
+					turn_half = 1;
+					motorPidSetSpeed(0, 0);
+				}
+				break;
+			case 4:
+				while (READ_HW_OUT_5==0)
+				{
+					
+				}
+				if (turn_half == 1)
+				{
+
+					if (MPU6050_turn(180) == 1)
+					{
+						turn_half = 0;
+						mode6_case = 5;
+					}
+
+				}
+				break;
+			case 5:
+				trace_logic();
+				if (trace_ccrossroad() == 1)
+				{
+					mode6_case = 6;
+					turn_right = 1;
+				}
+				break;
+			case 6:
+				if (turn_right == 1)
+				{
+					if (MPU6050_turn(85) == 1)
+					{
+						turn_right = 0;
+						mode6_case = 7;
+					}
+				}
+				break;
+			case 7:
+				trace_logic();
+				if (trace_ccrossroad() == 1)
+				{
+					mode6_case = 8;
+					turn_half = 1;
+				}
+			case 8:
+				if (turn_half == 1)
+				{
+					if (MPU6050_turn(180) == 1)
+					{
+						turn_half = 0;
+						motorPidSetSpeed(0,0);
+					}
+				}
+				break;
+			default:
+				break;
+			}
+			// while(trace_ccrossroad()==0);
+			// if(turn_left==1){
+			//   if(MPU6050_turn(100)==1)
+			// 	{
+			// 	 turn_left=0;				
+			// 	}}
+			// 	  while(turn_left==1)
+			// 			;
+			// 	   trace_logic();
+			// 	   while(trace_ccrossroad()==0);
+			// 	   if(turn_half==1){
+			// 		   if(MPU6050_turn(180)==1){
+			// 			   turn_half=0;						   	
+	        //             }
+			// 			}
+			// 			while(turn_half==1)
+			// 				;
+			// 			 trace_logic();
+			// 			 while(trace_ccrossroad()==0);
+			// 			 if(turn_right==1){
+			// 			  if(MPU6050_turn(100)==1)
+			// 					{
+			// 						turn_right=0;				
+			// 					}}
+			// 					while(turn_right==1);//判断是否转成功
+			// 					trace_logic();
+			// 					while(trace_ccrossroad()==0);
+			// 					motorPidSetSpeed(0,0);
+			// 					HAL_GPIO_WritePin (GPIOC, GPIO_PIN_15, GPIO_PIN_SET);//亮绿灯
+			// 					while(1);
 }
 	/*
 *********************************************************************************************************
