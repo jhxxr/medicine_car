@@ -76,9 +76,9 @@ float  g_fMPU6050YawMovePidOut2 = 0.00f; //第一个电机控制输出
 
 uint8_t delay_count_start = 0;
 extern uint16_t delay_count;
-uint8_t turn_left=1;
-uint8_t turn_right=1;
-uint8_t turn_half=1;
+uint8_t turn_left;
+uint8_t turn_right;
+uint8_t turn_half;
 uint8_t flag=0;
 uint8_t k210_turn=5;
 
@@ -276,9 +276,9 @@ int main(void)
   /* USER CODE BEGIN 1 */
 
 	uint8_t mode3_case = 0;  //模式3状态
-	uint8_t mode6_case = 0;  //模式3状态
-	uint8_t mode7_case = 0;  //模式3状态
-	uint8_t mode8_case = 0;  //模式3状态
+	uint8_t mode6_case = 0;  //模式6状态
+	uint8_t mode7_case = 0;  //模式7状态
+	uint8_t mode8_case = 0;  //模式8状态
 //  uint8_t  adc=READ_HW_OUT_5;
 
   /* USER CODE END 1 */
@@ -587,7 +587,7 @@ int main(void)
 			case 2:
 				if (turn_left == 1)
 				{
-					if (MPU6050_turn(90,2) == 1)
+					if (MPU6050_turn(-90,2) == 1)
 					{
 						turn_left = 0;
 						mode6_case = 3;
@@ -613,6 +613,7 @@ int main(void)
 						turn_half = 0;
 						mode6_case = 5;
 						motorPidSetSpeed(0, 0);
+						HAL_GPIO_WritePin (GPIOB, GPIO_PIN_14, GPIO_PIN_SET);//亮红灯
 					}
 
 				}
@@ -623,6 +624,7 @@ int main(void)
 				{
 					
 				}
+				HAL_GPIO_WritePin (GPIOB, GPIO_PIN_14, GPIO_PIN_RESET);
 				motorPidSetSpeed(2,2);
 				mode6_case = 6;
 			case 6:
@@ -637,7 +639,7 @@ int main(void)
 			case 7:
 				if (turn_right == 1)
 				{
-					if (MPU6050_turn(90,2) == 1)
+					if (MPU6050_turn(-90,2) == 1)
 					{
 						turn_right = 0;
 						mode6_case = 8;
@@ -658,6 +660,7 @@ int main(void)
 					{
 						turn_half = 0;
 						motorPidSetSpeed(0,0);
+							HAL_GPIO_WritePin (GPIOC, GPIO_PIN_15, GPIO_PIN_SET);//亮绿灯
 					}
 				}
 				break;
@@ -688,15 +691,15 @@ int main(void)
 				if (trace_ccrossroad() == 1)
 				{
 					mode7_case = 2;
-					turn_left = 1;
+					turn_right = 1;
 				}
 				break;
 			case 2:
-				if (turn_left == 1)
+				if (turn_right == 1)
 				{
-					if (MPU6050_turn(-90,2) == 1)
+					if (MPU6050_turn(90,2) == 1)
 					{
-						turn_left = 0;
+						turn_right = 0;
 						mode7_case = 3;
 					}
 				}
@@ -720,6 +723,7 @@ int main(void)
 						turn_half = 0;
 						mode7_case = 5;
 						motorPidSetSpeed(0, 0);
+						HAL_GPIO_WritePin (GPIOB, GPIO_PIN_14, GPIO_PIN_SET);//亮红灯
 					}
 
 				}
@@ -730,6 +734,7 @@ int main(void)
 				{
 					
 				}
+				HAL_GPIO_WritePin (GPIOB, GPIO_PIN_14, GPIO_PIN_RESET);	
 				motorPidSetSpeed(2,2);
 				mode7_case = 6;
 			case 6:
@@ -742,11 +747,11 @@ int main(void)
 				}
 				break;
 			case 7:
-				if (turn_right == 1)
+				if (turn_left == 1)
 				{
 					if (MPU6050_turn(-90,2) == 1)
 					{
-						turn_right = 0;
+						turn_left = 0;
 						mode7_case = 8;
 					}
 				}
@@ -765,6 +770,7 @@ int main(void)
 					{
 						turn_half = 0;
 						motorPidSetSpeed(0,0);
+							HAL_GPIO_WritePin (GPIOC, GPIO_PIN_15, GPIO_PIN_SET);//亮绿灯
 					}
 				}
 				break;
@@ -875,6 +881,8 @@ if(g_ucMode == 6)
 *********************************************************************************************************
 */
 			if(g_ucMode == 8){
+				sprintf((char*)OledString, "Mileage:%.2f", Mileage);//显示里程
+		    OLED_ShowString(0,1,OledString,12);//这个是oled驱动里面的，是显示位置的一个函数，
 				switch(mode8_case)
 				{
 					case 0:
@@ -889,7 +897,7 @@ if(g_ucMode == 6)
 						{
 						if(k210_turn==0){
 							mode8_case=11;//中端：k210给左判断
-               turn_left=1;    
+                          turn_left=1;    
 						}
 						
 						else if(k210_turn==1){
@@ -918,8 +926,7 @@ if(g_ucMode == 6)
 								{
 									mode8_case = 13;
 									turn_half = 1;									
-									// motorPidSetSpeed(0, 0);
-									HAL_GPIO_WritePin (GPIOB, GPIO_PIN_14, GPIO_PIN_SET);//亮红灯
+									
 								}
 								break;
 					case 13:
@@ -930,50 +937,57 @@ if(g_ucMode == 6)
 							if (MPU6050_turn(180,0) == 1)
 							{
 								turn_half = 0;
+								mode8_case = 14;
+								motorPidSetSpeed(0, 0);
+								HAL_GPIO_WritePin (GPIOB, GPIO_PIN_14, GPIO_PIN_SET);//亮红灯
 								
 							}
 
 						}
+					case 14:	
 						while (READ_HW_OUT_5==0)
 						{
 						
 						}
 						HAL_GPIO_WritePin (GPIOB, GPIO_PIN_14, GPIO_PIN_RESET);	
-						mode8_case = 14;					
-						break;
-					case 14: 
+						motorPidSetSpeed(2,2);
+						mode8_case = 15;					
+						
+					case 15: 
 							trace_logic();
 						if (trace_ccrossroad() == 1)
 						{
-							mode8_case = 15;
+							mode8_case = 16;
 							turn_right = 1;
 						}
 						break;
-					case 15:
+					case 16:
 						if (turn_right == 1)
 							{
 								if (MPU6050_turn(-90,2) == 1)
 								{
 									turn_right = 0;
-									mode8_case = 16;
+									mode8_case = 17;
 									Mileage=0;
 								}
 							}
 							break;
-					case 16:
+					case 17:
 					       trace_logic();
-					     if (trace_ccrossroad() == 1&&Mileage>200)//跳过第一个十字路口
+					     if (trace_ccrossroad() == 1&&Mileage>170)//跳过第一个十字路口
 							{
-								mode8_case = 17;
+								mode8_case = 18;
 								turn_half = 1;
 							}
-					case 17:
+						
+					case 18:
 							if (turn_half == 1)
 							{
 								if (MPU6050_turn(180,0) == 1)
 								{
 									turn_half = 0;
 									motorPidSetSpeed(0,0);
+									HAL_GPIO_WritePin (GPIOC, GPIO_PIN_15, GPIO_PIN_SET);//亮绿灯
 								}
 							}
 							break;
@@ -993,7 +1007,7 @@ if(g_ucMode == 6)
 								{
 									mode8_case = 23;
 									turn_half = 1;									
-									// motorPidSetSpeed(0, 0);
+									motorPidSetSpeed(0, 0);
 									HAL_GPIO_WritePin (GPIOB, GPIO_PIN_14, GPIO_PIN_SET);//亮红灯
 								}
 								break;
@@ -1005,50 +1019,55 @@ if(g_ucMode == 6)
 							if (MPU6050_turn(180,0) == 1)
 							{
 								turn_half = 0;
-								
+								mode8_case = 24;
+								motorPidSetSpeed(0, 0);
+						        HAL_GPIO_WritePin (GPIOB, GPIO_PIN_14, GPIO_PIN_SET);//亮红灯
 							}
+							}
+					case 24:		
 
-						}
 						while (READ_HW_OUT_5==0)//等待取药
 						{
 						
 						}
 						HAL_GPIO_WritePin (GPIOB, GPIO_PIN_14, GPIO_PIN_RESET);	
-						mode8_case = 24;					
-						break;
-					case 24: 
+						motorPidSetSpeed(2,2);
+						mode8_case = 25;					
+					
+					case 25: 
 							trace_logic();
 						if (trace_ccrossroad() == 1)
 						{
-							mode8_case = 25;
+							mode8_case = 26;
 							turn_left = 1;
 						}
 						break;
-					case 25:
+					case 26:
 						if (turn_left == 1)
 							{
 								if (MPU6050_turn(90,2) == 1)
 								{
 									turn_left = 0;
-									mode8_case = 26;
+									mode8_case = 27;
 									Mileage=0;
 								}
 							}
 							break;
-					case 26:
+					case 27:
 					       trace_logic();
-					     if (trace_ccrossroad() == 1&&Mileage>200)//跳过第一个十字路口
+					     if (trace_ccrossroad() == 1&&Mileage>170)//跳过第一个十字路口
 							{
-								mode8_case = 27;
+								mode8_case = 28;
 								turn_half = 1;
 							}
-					case 27:
+					case 28:
 							if (turn_half == 1)
 							{
 								if (MPU6050_turn(180,0) == 1)
 								{
 									turn_half = 0;
 									motorPidSetSpeed(0,0);
+										HAL_GPIO_WritePin (GPIOC, GPIO_PIN_15, GPIO_PIN_SET);//亮绿灯
 								}
 							}
 							break;
