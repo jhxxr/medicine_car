@@ -79,7 +79,8 @@ extern uint16_t delay_count;
 uint8_t turn_left=1;
 uint8_t turn_right=1;
 uint8_t turn_half=1;
-uint8_t Drug_flag=0;
+uint8_t flag=0;
+uint8_t k210_turn=5;
 
 //#define Drug_testing HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_14);
 //#define green_light HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_15);
@@ -160,10 +161,11 @@ int trace_ccrossroad(void)
 	else if(g_ucaHW_Read[0] == 0&&g_ucaHW_Read[1] == 1&&g_ucaHW_Read[2] == 1&&g_ucaHW_Read[3] == 0 ){return 1;}//0110
 	else if(g_ucaHW_Read[0] == 1&&g_ucaHW_Read[1] == 1&&g_ucaHW_Read[2] == 1&&g_ucaHW_Read[3] == 0 ){return 1;}//1110
 	else if(g_ucaHW_Read[0] == 0&&g_ucaHW_Read[1] == 1&&g_ucaHW_Read[2] == 1&&g_ucaHW_Read[3] == 1 ){return 1;}//0111
+	else if(g_ucaHW_Read[0] == 0&&g_ucaHW_Read[1] == 0&&g_ucaHW_Read[2] == 1&&g_ucaHW_Read[3] == 0 ){return 1;}//0011
+	else if(g_ucaHW_Read[0] == 1&&g_ucaHW_Read[1] == 1&&g_ucaHW_Read[2] == 0&&g_ucaHW_Read[3] == 0 ){return 1;}//1100
 	else 
 		return 0;
-//	if(g_ucaHW_Read[0] == 0&&g_ucaHW_Read[1] == 0&&g_ucaHW_Read[2] == 1&&g_ucaHW_Read[3] == 0 ){return 1;}//0011
-//	if(g_ucaHW_Read[0] == 1&&g_ucaHW_Read[1] == 1&&g_ucaHW_Read[2] == 0&&g_ucaHW_Read[3] == 0 ){return 1;}//1100
+	
 }
 
 
@@ -337,6 +339,7 @@ int main(void)
   MPU_Init(); //初始化MPU6050
   while(MPU_Init()!=0);//初始化MPU6050模块的MPU 注意初始化阶段不要移动小车
   while(mpu_dmp_init()!=0);//mpu6050,dmp初始化
+  while(g_ucMode==0);//等待K210识别数字
   while(READ_HW_OUT_5==1);//等待放药品
 	 HAL_Delay(1000);
   delay_count = 0;
@@ -534,18 +537,7 @@ int main(void)
 }
 		
 		
-			
-
 		
-	
-	
-
-	
-	
-
-
-
-
 /*
 *********************************************************************************************************
 *	模    式  : 5
@@ -583,48 +575,88 @@ int main(void)
 *	功能说明: 识别数字1
 *********************************************************************************************************
 */
-// if(g_ucMode == 6)
-// {
-// 	sprintf((char*)OledString, "Mileage:%.2f", Mileage);//显示里程
-// 	OLED_ShowString(0,1,OledString,12);//这个是oled驱动里面的，是显示位置的一个函数，
-// 	sprintf((char *)OledString,"y:%.2f  \r\n",yaw);//显示6050数据  航向角
-// 	OLED_ShowString(0,5,OledString,12);//这个是oled驱动里面的，是显示位置的一个函数，
-// 	if(Mileage<100){
-// 	motorPidSetSpeed(2,2);
-// 	}
-// 	if((Mileage>100)&&(turn_left==1)){
-// 		if(MPU6050_turn(-100)==1)
-// 	  {
-// 		turn_left=0;
-			
-// 		}
-// 	}
-// 	if(Mileage>100&&Mileage<170){
-// 		motorPidSetSpeed(2,2);
-// 	}
-		
-// 	if(Mileage>170&&turn_half==1){
-// 		motorPidSetSpeed(0,0);
-// 		HAL_GPIO_WritePin (GPIOB, GPIO_PIN_14, GPIO_PIN_SET);//亮红灯
-// 		while(READ_HW_OUT_5==0);//等待拿药品
-// 		HAL_GPIO_WritePin (GPIOB, GPIO_PIN_14, GPIO_PIN_RESET);
-// 		HAL_Delay(200);
-// 		if(MPU6050_turn(180)==1){
-// 		 turn_half=0;//转180度
-// 		}}
-// 		if(Mileage>170&&turn_half==0){
-// 			motorPidSetSpeed(2,2);
-// 			if(trace_ccrossroad()==1&&turn_right==1){
-// 				if(MPU6050_turn(100)==1){
-// 			turn_right=0;
-// 		}}}
-				
-// 		if(Mileage>170&&turn_half==0&&turn_right==0){
-// 				trace_logic();
-// 			if(trace_ccrossroad()==1){
-// 				motorPidSetSpeed(0,0);
-// 				HAL_GPIO_WritePin (GPIOC, GPIO_PIN_15, GPIO_PIN_SET);//亮绿灯
-// 			}}}
+if(g_ucMode == 6){
+	sprintf((char*)OledString, "Mileage:%.2f", Mileage);//显示里程
+	OLED_ShowString(0,1,OledString,12);//这个是oled驱动里面的，是显示位置的一个函数，
+	
+			trace_logic();
+			while(trace_ccrossroad()==0);
+			if(turn_left==1){
+			  if(MPU6050_turn(100)==1)
+				{
+				 turn_left=0;				
+				}}
+				  while(turn_left==1)
+						;
+				   trace_logic();
+				   while(trace_ccrossroad()==0);
+				   if(turn_half==1){
+					   if(MPU6050_turn(180)==1){
+						   turn_half=0;						   	
+	                    }
+						}
+						while(turn_half==1)
+							;
+						 trace_logic();
+						 while(trace_ccrossroad()==0);
+						 if(turn_right==1){
+						  if(MPU6050_turn(100)==1)
+								{
+									turn_right=0;				
+								}}
+								while(turn_right==1);//判断是否转成功
+								trace_logic();
+								while(trace_ccrossroad()==0);
+								motorPidSetSpeed(0,0);
+								HAL_GPIO_WritePin (GPIOC, GPIO_PIN_15, GPIO_PIN_SET);//亮绿灯
+								while(1);
+}
+	/*
+*********************************************************************************************************
+*	模    式  : 7
+*	功能说明: 识别数字2
+*********************************************************************************************************
+*/
+
+if(g_ucMode == 7){
+	sprintf((char*)OledString, "Mileage:%.2f", Mileage);//显示里程
+	OLED_ShowString(0,1,OledString,12);//这个是oled驱动里面的，是显示位置的一个函数，
+	
+			trace_logic();
+			while(trace_ccrossroad()==0);
+			if(turn_right==1){
+			  if(MPU6050_turn(-100)==1)
+				{
+				 turn_right=0;				
+				}}
+				  while(turn_right==1)
+						;
+				   trace_logic();
+				   while(trace_ccrossroad()==0);
+				   if(turn_half==1){
+					   if(MPU6050_turn(180)==1){
+						   turn_half=0;						   	
+	                    }
+						}
+						while(turn_half==1)
+							;
+						 trace_logic();
+						 while(trace_ccrossroad()==0);
+						 if(turn_left==1){
+						  if(MPU6050_turn(100)==1)
+								{
+									turn_left=0;				
+								}}
+								while(turn_left==1);//判断是否转成功
+								trace_logic();
+								while(trace_ccrossroad()==0);
+								motorPidSetSpeed(0,0);
+								HAL_GPIO_WritePin (GPIOC, GPIO_PIN_15, GPIO_PIN_SET);//亮绿灯
+								while(1);
+}
+
+
+/*
 if(g_ucMode == 6)
 {
 	sprintf((char*)OledString, "Mileage:%.2f", Mileage);//显示里程
@@ -665,56 +697,158 @@ if(g_ucMode == 6)
 				motorPidSetSpeed(0,0);
 				HAL_GPIO_WritePin (GPIOC, GPIO_PIN_15, GPIO_PIN_SET);//亮绿灯
 			}}}
-		/*
+			*/
+
+// 		/*
+// *********************************************************************************************************
+// *	模    式  : 7
+// *	功能说明: 识别数字2
+// *********************************************************************************************************
+// */
+// 	if(g_ucMode == 7)
+// {
+// 	if(Mileage==0){
+// 	   while(!(HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_14)==0));//等待装药品
+// 		trace_logic();
+// 	}
+
+// 	if(Mileage>0&&Mileage<100){
+// 	trace_logic();
+// 	}
+// 	if((Mileage==100)&&(turn_right==1)){
+// 		if(MPU6050_turn(-100)==1)
+// 	  {
+// 		turn_right=0;
+			
+// 		}
+// 	}
+// 	if(Mileage>100&&Mileage<170){
+// 		trace_logic();
+// 	}
+		
+// 	if(Mileage>170&&turn_half==1){
+// 		motorPidSetSpeed(0,0);
+// 		HAL_GPIO_WritePin (GPIOB, GPIO_PIN_14, GPIO_PIN_SET);//亮红灯
+// 		while(!(HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_14)==1));//等待拿药品
+// 		HAL_GPIO_WritePin (GPIOB, GPIO_PIN_14, GPIO_PIN_RESET);
+// 		HAL_Delay(200);
+// 		if(MPU6050_turn(180)==1)
+// 			{
+// 		 turn_half=0;//转180度
+// 		}
+// 		}
+// 		if(Mileage>170&&turn_half==0){
+// 			trace_logic();
+// 			if(trace_ccrossroad()==1&&turn_left==1){
+// 				if(MPU6050_turn(100)==1){
+// 			turn_left=0;
+// 		}}}
+				
+// 		if(Mileage>170&&turn_half==0&&turn_left==0){
+// 				trace_logic();
+// 			if(trace_ccrossroad()==1){
+// 				motorPidSetSpeed(0,0);
+// 				HAL_GPIO_WritePin (GPIOC, GPIO_PIN_15, GPIO_PIN_SET);//亮绿灯
+// 			}}}
+					/*
 *********************************************************************************************************
-*	模    式  : 7
-*	功能说明: 识别数字2
+*	模    式  : 8
+*	功能说明: 识别中端房、远端房
 *********************************************************************************************************
 */
-	if(g_ucMode == 7)
-{
-	if(Mileage==0){
-	   while(!(HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_14)==0));//等待装药品
-		trace_logic();
-	}
+			if(g_ucMode == 8){
+				switch(flag)
+				{
+					case 0:{
+											
+					      trace_logic();
+			            	while(!(trace_ccrossroad()==1&&Mileage>150));
+						if(k210_turn==0)
+						flag=1;
+						else if(k210_turn==1)
+						flag=2;
+						else
+						flag=3;
+				        break;
+					}
+					// /*******************************  中端左边  ******************************************/
+					case 1:{
+						     if(turn_left==1){
+								if(MPU6050_turn(100)==1)
+								{
+									turn_left=0;				
+								}}
+								while(turn_left==1);
+								trace_logic();
+								while(!(Mileage>250&&trace_ccrossroad()==1));
+								motorPidSetSpeed(0,0);
+								HAL_GPIO_WritePin (GPIOB, GPIO_PIN_14, GPIO_PIN_SET);//亮红灯
+								while(!(HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_14)==1));//等待拿药品
+								HAL_Delay(500);
+								HAL_GPIO_WritePin (GPIOB, GPIO_PIN_14, GPIO_PIN_RESET);
+								if(turn_half==1){
+                               if(MPU6050_turn(180)==1)
+			                      {
+		                        turn_half=0;//转180度
+		                          }							
+								}
+								while(turn_half==1);//判断是否转成功
+								trace_logic();
+								    while(trace_ccrossroad()==0);
+								 if(turn_right==1){
+								if(MPU6050_turn(100)==1)
+								{
+									turn_right=0;				
+								}}
+								while(turn_right==1);//判断是否转成功
+								trace_logic();
+								while(!(trace_ccrossroad()==1&&Mileage>520));
+								motorPidSetSpeed(0,0);
+								HAL_GPIO_WritePin (GPIOC, GPIO_PIN_15, GPIO_PIN_SET);//亮绿灯
+								while(1);
+					        }
+						/*******************************  中端右边  ******************************************/
+					case 2:{
+						     if(turn_right==1){
+								if(MPU6050_turn(-100)==1)
+								{
+									turn_right=0;				
+								}}
+								while(turn_right==1);//判断是否转成功
+								trace_logic();
+								while(!(Mileage>250&&trace_ccrossroad()==1));
+								motorPidSetSpeed(0,0);
+								HAL_GPIO_WritePin (GPIOB, GPIO_PIN_14, GPIO_PIN_SET);//亮红灯
+								while(!(HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_14)==1));//等待拿药品
+								HAL_Delay(500);
+								HAL_GPIO_WritePin (GPIOB, GPIO_PIN_14, GPIO_PIN_RESET);
+								if(turn_half==1){
+                               if(MPU6050_turn(180)==1)
+			                      {
+		                        turn_half=0;//转180度
+		                          }							
+								}
+								while(turn_half==1);//判断是否转成功
+								trace_logic();
+							    while(trace_ccrossroad()==0);
+								 if(turn_left==1){
+								if(MPU6050_turn(100)==1)
+								{
+									turn_left=0;				
+								}}
+								while(turn_left==1);//判断是否转成功
+								trace_logic();
+								while(!(trace_ccrossroad()==1&&Mileage>520));
+								motorPidSetSpeed(0,0);
+								HAL_GPIO_WritePin (GPIOC, GPIO_PIN_15, GPIO_PIN_SET);//亮绿灯
+								while(1);
+					        }
+							
+							
 
-	if(Mileage>0&&Mileage<100){
-	trace_logic();
-	}
-	if((Mileage==100)&&(turn_right==1)){
-		if(MPU6050_turn(-100)==1)
-	  {
-		turn_right=0;
-			
-		}
-	}
-	if(Mileage>100&&Mileage<170){
-		trace_logic();
-	}
-		
-	if(Mileage>170&&turn_half==1){
-		motorPidSetSpeed(0,0);
-		HAL_GPIO_WritePin (GPIOB, GPIO_PIN_14, GPIO_PIN_SET);//亮红灯
-		while(!(HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_14)==1));//等待拿药品
-		HAL_GPIO_WritePin (GPIOB, GPIO_PIN_14, GPIO_PIN_RESET);
-		HAL_Delay(200);
-		if(MPU6050_turn(180)==1)
-			{
-		 turn_half=0;//转180度
-		}}
-		if(Mileage>170&&turn_half==0){
-			trace_logic();
-			if(trace_ccrossroad()==1&&turn_left==1){
-				if(MPU6050_turn(100)==1){
-			turn_left=0;
-		}}}
 				
-		if(Mileage>170&&turn_half==0&&turn_left==0){
-				trace_logic();
-			if(trace_ccrossroad()==1){
-				motorPidSetSpeed(0,0);
-				HAL_GPIO_WritePin (GPIOC, GPIO_PIN_15, GPIO_PIN_SET);//亮绿灯
-			}}}
+				}}		
+			
 
 
 /*

@@ -70,6 +70,8 @@ extern uint8_t g_ucMode;//当前模式变量
 extern uint8_t turn_left;
 extern uint8_t turn_right;
 extern uint8_t turn_half;
+extern uint8_t k210_turn;
+
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
@@ -437,36 +439,75 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 	
     if( huart == &huart1)//判断中断源
     {
+      	if(g_ucUsart1ReceiveData == 'A') {//k210识别数字1
+				g_ucMode=6;
+				turn_left=1;
+				turn_right=1;
+				turn_half=1;
+			}
+			  if(g_ucUsart1ReceiveData == 'B') {//k210识别数字2
+				g_ucMode=7;
+				turn_left=1;
+				turn_right=1;
+				turn_half=1;
+			}
+        if(g_ucUsart1ReceiveData == 'C') {//k210识别数字3
+        g_ucMode=8;
+				turn_left=1;
+				turn_right=1;
+				turn_half=1;
+      }
+        if(g_ucUsart1ReceiveData == 'D') {//k210识别数字4
+        g_ucMode=8;
+				turn_left=1;
+				turn_right=1;
+				turn_half=1;
+      }
+        if(g_ucUsart1ReceiveData == 'E') {//k210识别数字5
+        g_ucMode=8;
+				turn_left=1;
+				turn_right=1;
+				turn_half=1;
+      }
+        if(g_ucUsart1ReceiveData == 'F') {//k210识别数字6
+        g_ucMode=8;
+				turn_left=1;
+				turn_right=1;
+				turn_half=1;
+      }
+        if(g_ucUsart1ReceiveData == 'G') {//k210识别数字7
+        g_ucMode=8;
+				turn_left=1;
+				turn_right=1;
+				turn_half=1;
+      }
+        if(g_ucUsart1ReceiveData == 'H') {//k210识别数字8
+        g_ucMode=8;
+				turn_left=1;
+				turn_right=1;
+				turn_half=1;
+      }
       if(g_ucUsart1ReceiveData == 'L') {//左转90度
+       k210_turn=0;
         // while (1)
         // {
         //   if(MPU6050_turn(90)==1)break;
         // } 
       }
       if(g_ucUsart1ReceiveData == 'R') {//右转90度
+      k210_turn=1;
         // while (1)
         // {
         //   if(MPU6050_turn(-90)==1)break;
         // } 
       }
 			
-      if(g_ucUsart1ReceiveData == 'C') motorPidSetSpeed(0,0);//停止
-      if(g_ucUsart1ReceiveData == 'D') motorPidSetSpeed(1,2);//右边运动	
-      if(g_ucUsart1ReceiveData == 'E') motorPidSetSpeed(2,1);//左边运动
-      if(g_ucUsart1ReceiveData == 'F') motorPidSpeedUp();//加速
-      if(g_ucUsart1ReceiveData == 'G') motorPidSpeedCut();//减速
-			if(g_ucUsart1ReceiveData == 'A') {
-				g_ucMode=6;
-				turn_left=1;
-				turn_right=1;
-				turn_half=1;
-			}
-			if(g_ucUsart1ReceiveData == 'B') {
-				g_ucMode=7;
-				turn_left=1;
-				turn_right=1;
-				turn_half=1;
-			}
+      // if(g_ucUsart1ReceiveData == 'C') motorPidSetSpeed(0,0);//停止
+      // if(g_ucUsart1ReceiveData == 'D') motorPidSetSpeed(1,2);//右边运动	
+      // if(g_ucUsart1ReceiveData == 'E') motorPidSetSpeed(2,1);//左边运动
+      // if(g_ucUsart1ReceiveData == 'F') motorPidSpeedUp();//加速
+      // if(g_ucUsart1ReceiveData == 'G') motorPidSpeedCut();//减速
+		
       // if(g_ucUsart1ReceiveData == 'H')//转向90度
       // {				
       //   if(pidMPU6050YawMovement.target_val <= 180)pidMPU6050YawMovement.target_val += 90;//目标值
@@ -475,15 +516,15 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
       // {				
       //   if(pidMPU6050YawMovement.target_val >= -180)pidMPU6050YawMovement.target_val -= 90;//目标值
       //     }	
-      if(g_ucUsart1ReceiveData == 'J') //改变模式
-      {
-        if(g_ucMode == 7) g_ucMode = 1;//g_ucMode模式是0 1 2 3 4 5 
-        else
-        {
-          g_ucMode+=1;
-        }
-      }
-      if(g_ucUsart1ReceiveData == 'K') g_ucMode=0;//设置为显示模式
+      // if(g_ucUsart1ReceiveData == 'J') //改变模式
+      // {
+      //   if(g_ucMode == 7) g_ucMode = 1;//g_ucMode模式是0 1 2 3 4 5 
+      //   else
+      //   {
+      //     g_ucMode+=1;
+      //   }
+      // }
+      // if(g_ucUsart1ReceiveData == 'K') g_ucMode=0;//设置为显示模式
       HAL_UART_Receive_IT( &huart1,&g_ucUsart1ReceiveData, 1);//继续进行中断接收
     }
 }
