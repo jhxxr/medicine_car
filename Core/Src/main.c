@@ -120,7 +120,7 @@ void SystemClock_Config(void);
 *********************************************************************************************************
 */
 
-void MPU6050_straight(void)
+void MPU6050_straight(float speed)
 {
 		sprintf((char *)Usart3String,"pitch:%.2f roll:%.2f yaw:%.2f\r\n",pitch,roll,yaw);//显示6050数据 俯仰角 横滚角 航向角
 		HAL_UART_Transmit(&huart3,( uint8_t *)Usart3String,strlen(( const  char  *)Usart3String),0xFFFF);//通过串口三输出字符 strlen:计算字符串大小	
@@ -131,8 +131,8 @@ void MPU6050_straight(void)
 		while(mpu_dmp_get_data(&pitch,&roll,&yaw)!=0){} //读取数据
 		g_fMPU6050YawMovePidOut = PID_realize_angle(&pidMPU6050YawMovement,&yaw);//PID计算输出目标速度 这个速度，会和基础速度加减
 
-		g_fMPU6050YawMovePidOut1 = 0 + g_fMPU6050YawMovePidOut;//基础速度加减PID输出速度
-		g_fMPU6050YawMovePidOut2 = 0 - g_fMPU6050YawMovePidOut;
+		g_fMPU6050YawMovePidOut1 = speed + g_fMPU6050YawMovePidOut;//基础速度加减PID输出速度
+		g_fMPU6050YawMovePidOut2 = speed - g_fMPU6050YawMovePidOut;
 		if(g_fMPU6050YawMovePidOut1 >3) g_fMPU6050YawMovePidOut1 =3;//进行限幅
 		if(g_fMPU6050YawMovePidOut1 <-3) g_fMPU6050YawMovePidOut1 =-3;
 		if(g_fMPU6050YawMovePidOut2 >3) g_fMPU6050YawMovePidOut2 =3;//进行限幅
@@ -237,7 +237,7 @@ void trace_logic(void){
 *	返 回 值: 1
 *********************************************************************************************************
 */
-int MPU6050_turn(int angle)
+int MPU6050_turn(int angle,float speed)
 {
 	pidMPU6050YawMovement.target_val =yaw+angle;
 	//pidMPU6050YawMovement.target_val =pidMPU6050YawMovement.target_val +angle;
@@ -245,7 +245,7 @@ int MPU6050_turn(int angle)
 	// delay_count_start = 1;
 	while(1){
 
-		MPU6050_straight();//MPU6050定向行驶
+		MPU6050_straight(speed);//MPU6050定向行驶
 		sprintf((char *)OledString,"target:%.2f \r\n",pidMPU6050YawMovement.target_val);//
 		OLED_ShowString(0,1,OledString,12);//这个是oled驱动里面的，是显示位置的一个函数，
 		
@@ -447,7 +447,7 @@ int main(void)
 			motorPidSetSpeed(2,2);
 			break;
 		case 1:
-			if(MPU6050_turn(180)==1){
+			if(MPU6050_turn(180,0)==1){
 				mode3_case=0;
 			}
 
@@ -540,7 +540,7 @@ int main(void)
 		HAL_UART_Transmit(&huart3,( uint8_t *)Usart3String,strlen(( const  char  *)Usart3String),0xFFFF);//通过串口三输出字符 strlen:计算字符串大小	
 	    while(mpu_dmp_get_data(&pitch,&roll,&yaw)!=0){} //读取数据
 
- 		MPU6050_straight();//调用函数
+ 		MPU6050_straight(2);//调用函数
 
 
 	//    //mpu_dmp_get_data(&pitch,&roll,&yaw);//返回值:0,DMP成功解出欧拉角
@@ -585,7 +585,7 @@ if(g_ucMode == 6){
 			case 2:
 				if (turn_left == 1)
 				{
-					if (MPU6050_turn(86) == 1)
+					if (MPU6050_turn(90,2) == 1)
 					{
 						turn_left = 0;
 						mode6_case = 3;
@@ -609,7 +609,7 @@ if(g_ucMode == 6){
 				if (turn_half == 1)
 				{
 
-					if (MPU6050_turn(180) == 1)
+					if (MPU6050_turn(180,1) == 1)
 					{
 						turn_half = 0;
 						mode6_case = 5;
@@ -628,7 +628,7 @@ if(g_ucMode == 6){
 			case 6:
 				if (turn_right == 1)
 				{
-					if (MPU6050_turn(85) == 1)
+					if (MPU6050_turn(95,2) == 1)
 					{
 						turn_right = 0;
 						mode6_case = 7;
@@ -645,7 +645,7 @@ if(g_ucMode == 6){
 			case 8:
 				if (turn_half == 1)
 				{
-					if (MPU6050_turn(180) == 1)
+					if (MPU6050_turn(180,1) == 1)
 					{
 						turn_half = 0;
 						motorPidSetSpeed(0,0);
@@ -700,7 +700,7 @@ if(g_ucMode == 7){
 			trace_logic();
 			while(trace_ccrossroad()==0);
 			if(turn_right==1){
-			  if(MPU6050_turn(-100)==1)
+			  if(MPU6050_turn(-100,2)==1)
 				{
 				 turn_right=0;				
 				}}
@@ -709,7 +709,7 @@ if(g_ucMode == 7){
 				   trace_logic();
 				   while(trace_ccrossroad()==0);
 				   if(turn_half==1){
-					   if(MPU6050_turn(180)==1){
+					   if(MPU6050_turn(180,0)==1){
 						   turn_half=0;						   	
 	                    }
 						}
@@ -718,7 +718,7 @@ if(g_ucMode == 7){
 						 trace_logic();
 						 while(trace_ccrossroad()==0);
 						 if(turn_left==1){
-						  if(MPU6050_turn(100)==1)
+						  if(MPU6050_turn(100,2)==1)
 								{
 									turn_left=0;				
 								}}
@@ -831,98 +831,98 @@ if(g_ucMode == 6)
 *	功能说明: 识别中端房、远端房
 *********************************************************************************************************
 */
-			if(g_ucMode == 8){
-				switch(flag)
-				{
-					case 0:{
+			// if(g_ucMode == 8){
+			// 	switch(flag)
+			// 	{
+			// 		case 0:{
 											
-					      trace_logic();
-			            	while(!(trace_ccrossroad()==1&&Mileage>150));
-						if(k210_turn==0)
-						flag=1;
-						else if(k210_turn==1)
-						flag=2;
-						else
-						flag=3;
-				        break;
-					}
-					// /*******************************  中端左边  ******************************************/
-					case 1:{
-						     if(turn_left==1){
-								if(MPU6050_turn(100)==1)
-								{
-									turn_left=0;				
-								}}
-								while(turn_left==1);
-								trace_logic();
-								while(!(Mileage>250&&trace_ccrossroad()==1));
-								motorPidSetSpeed(0,0);
-								HAL_GPIO_WritePin (GPIOB, GPIO_PIN_14, GPIO_PIN_SET);//亮红灯
-								while(!(HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_14)==1));//等待拿药品
-								HAL_Delay(500);
-								HAL_GPIO_WritePin (GPIOB, GPIO_PIN_14, GPIO_PIN_RESET);
-								if(turn_half==1){
-                               if(MPU6050_turn(180)==1)
-			                      {
-		                        turn_half=0;//转180度
-		                          }							
-								}
-								while(turn_half==1);//判断是否转成功
-								trace_logic();
-								    while(trace_ccrossroad()==0);
-								 if(turn_right==1){
-								if(MPU6050_turn(100)==1)
-								{
-									turn_right=0;				
-								}}
-								while(turn_right==1);//判断是否转成功
-								trace_logic();
-								while(!(trace_ccrossroad()==1&&Mileage>520));
-								motorPidSetSpeed(0,0);
-								HAL_GPIO_WritePin (GPIOC, GPIO_PIN_15, GPIO_PIN_SET);//亮绿灯
-								while(1);
-					        }
-						/*******************************  中端右边  ******************************************/
-					case 2:{
-						     if(turn_right==1){
-								if(MPU6050_turn(-100)==1)
-								{
-									turn_right=0;				
-								}}
-								while(turn_right==1);//判断是否转成功
-								trace_logic();
-								while(!(Mileage>250&&trace_ccrossroad()==1));
-								motorPidSetSpeed(0,0);
-								HAL_GPIO_WritePin (GPIOB, GPIO_PIN_14, GPIO_PIN_SET);//亮红灯
-								while(!(HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_14)==1));//等待拿药品
-								HAL_Delay(500);
-								HAL_GPIO_WritePin (GPIOB, GPIO_PIN_14, GPIO_PIN_RESET);
-								if(turn_half==1){
-                               if(MPU6050_turn(180)==1)
-			                      {
-		                        turn_half=0;//转180度
-		                          }							
-								}
-								while(turn_half==1);//判断是否转成功
-								trace_logic();
-							    while(trace_ccrossroad()==0);
-								 if(turn_left==1){
-								if(MPU6050_turn(100)==1)
-								{
-									turn_left=0;				
-								}}
-								while(turn_left==1);//判断是否转成功
-								trace_logic();
-								while(!(trace_ccrossroad()==1&&Mileage>520));
-								motorPidSetSpeed(0,0);
-								HAL_GPIO_WritePin (GPIOC, GPIO_PIN_15, GPIO_PIN_SET);//亮绿灯
-								while(1);
-					        }
+			// 		      trace_logic();
+			//             	while(!(trace_ccrossroad()==1&&Mileage>150));
+			// 			if(k210_turn==0)
+			// 			flag=1;
+			// 			else if(k210_turn==1)
+			// 			flag=2;
+			// 			else
+			// 			flag=3;
+			// 	        break;
+			// 		}
+			// 		// /*******************************  中端左边  ******************************************/
+			// 		case 1:{
+			// 			     if(turn_left==1){
+			// 					if(MPU6050_turn(100)==1)
+			// 					{
+			// 						turn_left=0;				
+			// 					}}
+			// 					while(turn_left==1);
+			// 					trace_logic();
+			// 					while(!(Mileage>250&&trace_ccrossroad()==1));
+			// 					motorPidSetSpeed(0,0);
+			// 					HAL_GPIO_WritePin (GPIOB, GPIO_PIN_14, GPIO_PIN_SET);//亮红灯
+			// 					while(!(HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_14)==1));//等待拿药品
+			// 					HAL_Delay(500);
+			// 					HAL_GPIO_WritePin (GPIOB, GPIO_PIN_14, GPIO_PIN_RESET);
+			// 					if(turn_half==1){
+            //                    if(MPU6050_turn(180)==1)
+			//                       {
+		    //                     turn_half=0;//转180度
+		    //                       }							
+			// 					}
+			// 					while(turn_half==1);//判断是否转成功
+			// 					trace_logic();
+			// 					    while(trace_ccrossroad()==0);
+			// 					 if(turn_right==1){
+			// 					if(MPU6050_turn(100)==1)
+			// 					{
+			// 						turn_right=0;				
+			// 					}}
+			// 					while(turn_right==1);//判断是否转成功
+			// 					trace_logic();
+			// 					while(!(trace_ccrossroad()==1&&Mileage>520));
+			// 					motorPidSetSpeed(0,0);
+			// 					HAL_GPIO_WritePin (GPIOC, GPIO_PIN_15, GPIO_PIN_SET);//亮绿灯
+			// 					while(1);
+			// 		        }
+			// 			/*******************************  中端右边  ******************************************/
+			// 		case 2:{
+			// 			     if(turn_right==1){
+			// 					if(MPU6050_turn(-100)==1)
+			// 					{
+			// 						turn_right=0;				
+			// 					}}
+			// 					while(turn_right==1);//判断是否转成功
+			// 					trace_logic();
+			// 					while(!(Mileage>250&&trace_ccrossroad()==1));
+			// 					motorPidSetSpeed(0,0);
+			// 					HAL_GPIO_WritePin (GPIOB, GPIO_PIN_14, GPIO_PIN_SET);//亮红灯
+			// 					while(!(HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_14)==1));//等待拿药品
+			// 					HAL_Delay(500);
+			// 					HAL_GPIO_WritePin (GPIOB, GPIO_PIN_14, GPIO_PIN_RESET);
+			// 					if(turn_half==1){
+            //                    if(MPU6050_turn(180)==1)
+			//                       {
+		    //                     turn_half=0;//转180度
+		    //                       }							
+			// 					}
+			// 					while(turn_half==1);//判断是否转成功
+			// 					trace_logic();
+			// 				    while(trace_ccrossroad()==0);
+			// 					 if(turn_left==1){
+			// 					if(MPU6050_turn(100)==1)
+			// 					{
+			// 						turn_left=0;				
+			// 					}}
+			// 					while(turn_left==1);//判断是否转成功
+			// 					trace_logic();
+			// 					while(!(trace_ccrossroad()==1&&Mileage>520));
+			// 					motorPidSetSpeed(0,0);
+			// 					HAL_GPIO_WritePin (GPIOC, GPIO_PIN_15, GPIO_PIN_SET);//亮绿灯
+			// 					while(1);
+			// 		        }
 							
 							
 
 				
-				}}		
+			// 	}}		
 			
 
 
@@ -934,7 +934,7 @@ if(g_ucMode == 6)
 */
 	if (g_ucMode==10)
 	{
-		if(MPU6050_turn(100)==1){
+		if(MPU6050_turn(100,2)==1){
 			g_ucMode=1;
 		}
 	}
@@ -947,7 +947,7 @@ if(g_ucMode == 6)
 */
 	if (g_ucMode==11)
 	{
-		if(MPU6050_turn(-100)==1){
+		if(MPU6050_turn(-100,2)==1){
 			g_ucMode=1;
 		}
 	}
@@ -960,7 +960,7 @@ if(g_ucMode == 6)
 */
 	if (g_ucMode==12)
 	{
-		if(MPU6050_turn(180)==1){
+		if(MPU6050_turn(180,0)==1){
 			g_ucMode=1;
 		}
 	}
