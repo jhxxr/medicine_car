@@ -131,8 +131,8 @@ void MPU6050_straight(void)
 		while(mpu_dmp_get_data(&pitch,&roll,&yaw)!=0){} //读取数据
 		g_fMPU6050YawMovePidOut = PID_realize_angle(&pidMPU6050YawMovement,&yaw);//PID计算输出目标速度 这个速度，会和基础速度加减
 
-		g_fMPU6050YawMovePidOut1 = 1 + g_fMPU6050YawMovePidOut;//基础速度加减PID输出速度
-		g_fMPU6050YawMovePidOut2 = 1 - g_fMPU6050YawMovePidOut;
+		g_fMPU6050YawMovePidOut1 = 0 + g_fMPU6050YawMovePidOut;//基础速度加减PID输出速度
+		g_fMPU6050YawMovePidOut2 = 0 - g_fMPU6050YawMovePidOut;
 		if(g_fMPU6050YawMovePidOut1 >3) g_fMPU6050YawMovePidOut1 =3;//进行限幅
 		if(g_fMPU6050YawMovePidOut1 <-3) g_fMPU6050YawMovePidOut1 =-3;
 		if(g_fMPU6050YawMovePidOut2 >3) g_fMPU6050YawMovePidOut2 =3;//进行限幅
