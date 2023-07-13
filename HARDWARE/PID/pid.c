@@ -32,9 +32,9 @@ void PID_init()
 	pidHW_Tracking.err = 0.0;
 	pidHW_Tracking.err_last = 0.0;
 	pidHW_Tracking.err_sum = 0.0;
-	pidHW_Tracking.Kp = -1.50;
+	pidHW_Tracking.Kp = -1.40;
 	pidHW_Tracking.Ki = 0;
-	pidHW_Tracking.Kd = 1.58;
+	pidHW_Tracking.Kd = 1.49;
 
 	pidFollow.actual_val = 0.0;
 	pidFollow.target_val = 22.50; // ¶¨¾àÀë¸úËæ Ä¿±ê¾àÀë22.5cm

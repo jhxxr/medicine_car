@@ -213,9 +213,9 @@ void trace_logic(void){
 
 	g_fHW_PID_Out1 = 3 + g_fHW_PID_Out;//电机1速度=基础速度+循迹PID输出速度
 	g_fHW_PID_Out2 = 3 - g_fHW_PID_Out;//电机1速度=基础速度-循迹PID输出速度
-	if(g_fHW_PID_Out1 >5) g_fHW_PID_Out1 =5;//进行限幅 限幅速度在0-5之间
+	if(g_fHW_PID_Out1 >6) g_fHW_PID_Out1 =6;
 	if(g_fHW_PID_Out1 <0) g_fHW_PID_Out1 =0;
-	if(g_fHW_PID_Out2 >5) g_fHW_PID_Out2 =5;//进行限幅 限幅速度在0-5之间
+	if(g_fHW_PID_Out2 >6) g_fHW_PID_Out2 =6;
 	if(g_fHW_PID_Out2 <0) g_fHW_PID_Out2 =0;
 	if(g_cThisState != g_cLastState)//如何这次状态不等于上次状态、就进行改变目标速度和控制电机、在定时器中依旧定时控制电机
 	{
