@@ -87,7 +87,7 @@ uint8_t k210_turn=3;//0为左，1为右
 //#define red_light HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_14);
 
 //***************************模式控制***********************************//
-uint8_t g_ucMode = 7; 
+uint8_t g_ucMode = 0; 
 //小车运动模式标志位 0:显示功能、1:PID循迹模式 5:遥控角度闭环
 //***********************************************************************//
 
@@ -239,6 +239,7 @@ void trace_logic(void){
 */
 int MPU6050_turn(int angle,float speed)
 {
+	while(mpu_dmp_get_data(&pitch,&roll,&yaw)!=0){} //读取数据
 	pidMPU6050YawMovement.target_val =yaw+angle;
 	//pidMPU6050YawMovement.target_val =pidMPU6050YawMovement.target_val +angle;
 	// delay_count = 0;
@@ -329,9 +330,8 @@ int main(void)
   MPU_Init(); //初始化MPU6050
   while(MPU_Init()!=0);//初始化MPU6050模块的MPU 注意初始化阶段不要移动小车
   while(mpu_dmp_init()!=0);//mpu6050,dmp初始化
-  while(g_ucMode==0);//等待K210识别数字
   while(READ_HW_OUT_5==1);//等待放药品
-	 HAL_Delay(1000);
+  HAL_Delay(1000);
   delay_count = 0;
   delay_count_start = 1;
 
@@ -590,7 +590,7 @@ int main(void)
 			case 2:
 				if (turn_left == 1)
 				{
-					if (MPU6050_turn(-90,2) == 1)
+					if (MPU6050_turn(90,2) == 1)
 					{
 						turn_left = 0;
 						mode6_case = 3;
@@ -699,7 +699,7 @@ int main(void)
 			case 2:
 				if (turn_right == 1)
 				{
-					if (MPU6050_turn(90,2) == 1)
+					if (MPU6050_turn(-90,2) == 1)
 					{
 						turn_right = 0;
 						mode7_case = 3;
@@ -749,9 +749,9 @@ int main(void)
 				}
 				break;
 			case 7:
-				if (turn_left == 1)
+				if (turn_right == 1)
 				{
-					if (MPU6050_turn(-90,2) == 1)
+					if (MPU6050_turn(90,2) == 1)
 					{
 						turn_left = 0;
 						mode7_case = 8;
