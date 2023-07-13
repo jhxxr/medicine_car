@@ -27,7 +27,7 @@
 #include "motor.h"
 #include "niming.h"
 #include "pid.h"
-
+#include "main.h"
 
 /* USER CODE END Includes */
 
@@ -67,10 +67,11 @@ float Mileage;//里程数 单位cm
 
 extern tPid pidMPU6050YawMovement;  //利用6050偏航角 进行姿态控制的PID参数
 extern uint8_t g_ucMode;//当前模式变量
-extern uint8_t turn_left;
-extern uint8_t turn_right;
-extern uint8_t turn_half;
-extern uint8_t k210_turn;
+// extern uint8_t turn_left;
+// extern uint8_t turn_right;
+// extern uint8_t turn_half;
+// extern uint8_t k210_turn;
+extern uint8_t this_number;
 
 /* USER CODE END PM */
 
@@ -439,6 +440,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 	
     if( huart == &huart1)//判断中断源
     {
+<<<<<<< Updated upstream
       	if(g_ucUsart1ReceiveData == 'A') {//k210识别数字1
 				g_ucMode=6;
 			
@@ -486,7 +488,101 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
         // {
         //   if(MPU6050_turn(-90)==1)break;
         // } 
+=======
+      switch (g_ucUsart1ReceiveData)
+      {
+      case 'A'://k210识别数字1
+        this_number=1;
+          break;
+      case 'B'://k210识别数字2
+        this_number=2;
+          break;
+      case 'C'://k210识别数字3
+        this_number=3;
+          break;
+      case 'D'://k210识别数字4
+        this_number=4;
+          break;
+      case 'E'://k210识别数字5
+        this_number=5;
+          break;
+      case 'F'://k210识别数字6
+        this_number=6;
+          break;
+      case 'G'://k210识别数字7
+        this_number=7;
+          break;
+      case 'H'://k210识别数字8
+        this_number=8;
+          break;
+
+      
+      default:
+        break;
+>>>>>>> Stashed changes
       }
+      // 	if(g_ucUsart1ReceiveData == 'A') {//k210识别数字1
+			// 	g_ucMode=6;
+			// 	turn_left=1;
+			// 	turn_right=1;
+			// 	turn_half=1;
+			// }
+			//   if(g_ucUsart1ReceiveData == 'B') {//k210识别数字2
+			// 	g_ucMode=7;
+			// 	turn_left=1;
+			// 	turn_right=1;
+			// 	turn_half=1;
+			// }
+      //   if(g_ucUsart1ReceiveData == 'C') {//k210识别数字3
+      //   g_ucMode=8;
+			// 	turn_left=1;
+			// 	turn_right=1;
+			// 	turn_half=1;
+      // }
+      //   if(g_ucUsart1ReceiveData == 'D') {//k210识别数字4
+      //   g_ucMode=8;
+			// 	turn_left=1;
+			// 	turn_right=1;
+			// 	turn_half=1;
+      // }
+      //   if(g_ucUsart1ReceiveData == 'E') {//k210识别数字5
+      //   g_ucMode=8;
+			// 	turn_left=1;
+			// 	turn_right=1;
+			// 	turn_half=1;
+      // }
+      //   if(g_ucUsart1ReceiveData == 'F') {//k210识别数字6
+      //   g_ucMode=8;
+			// 	turn_left=1;
+			// 	turn_right=1;
+			// 	turn_half=1;
+      // }
+      //   if(g_ucUsart1ReceiveData == 'G') {//k210识别数字7
+      //   g_ucMode=8;
+			// 	turn_left=1;
+			// 	turn_right=1;
+			// 	turn_half=1;
+      // }
+      //   if(g_ucUsart1ReceiveData == 'H') {//k210识别数字8
+      //   g_ucMode=8;
+			// 	turn_left=1;
+			// 	turn_right=1;
+			// 	turn_half=1;
+      // }
+      // if(g_ucUsart1ReceiveData == 'L') {//左转90度
+      //  k210_turn=0;
+      //   // while (1)
+      //   // {
+      //   //   if(MPU6050_turn(90)==1)break;
+      //   // } 
+      // }
+      // if(g_ucUsart1ReceiveData == 'R') {//右转90度
+      // k210_turn=1;
+      //   // while (1)
+      //   // {
+      //   //   if(MPU6050_turn(-90)==1)break;
+      //   // } 
+      // }
 			
       // if(g_ucUsart1ReceiveData == 'C') motorPidSetSpeed(0,0);//停止
       // if(g_ucUsart1ReceiveData == 'D') motorPidSetSpeed(1,2);//右边运动	

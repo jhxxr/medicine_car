@@ -6,6 +6,9 @@
         "*.wxs": "javascript",
         "*.m": "matlab",
         "pid.h": "c",
-        "main.h": "c"
+        "main.h": "c",
+        "route.h": "c",
+        "stdio.h": "c",
+        "stm32f1xx_hal.h": "c"
     }
 }

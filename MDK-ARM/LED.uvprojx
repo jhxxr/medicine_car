@@ -338,7 +338,7 @@
               <MiscControls></MiscControls>
               <Define>USE_HAL_DRIVER,STM32F103xB</Define>
               <Undefine></Undefine>
-              <IncludePath>../Core/Inc;../Drivers/STM32F1xx_HAL_Driver/Inc;../Drivers/STM32F1xx_HAL_Driver/Inc/Legacy;../Drivers/CMSIS/Device/ST/STM32F1xx/Include;../Drivers/CMSIS/Include;../HARDWARE/OLED;../HARDWARE/MOTOR;../HARDWARE/NIMING;../HARDWARE/PID;../HARDWARE/CJSON;../HARDWARE/HC_SR04;../HARDWARE/MPU6050;../HARDWARE/MPU6050/eMPL</IncludePath>
+              <IncludePath>../Core/Inc;../Drivers/STM32F1xx_HAL_Driver/Inc;../Drivers/STM32F1xx_HAL_Driver/Inc/Legacy;../Drivers/CMSIS/Device/ST/STM32F1xx/Include;../Drivers/CMSIS/Include;../HARDWARE/OLED;../HARDWARE/MOTOR;../HARDWARE/NIMING;../HARDWARE/PID;../HARDWARE/CJSON;../HARDWARE/HC_SR04;../HARDWARE/MPU6050;../HARDWARE/MPU6050/eMPL;..\HARDWARE\route</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -882,6 +882,11 @@
               <FileName>inv_mpu.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\HARDWARE\MPU6050\eMPL\inv_mpu.c</FilePath>
+            </File>
+            <File>
+              <FileName>route.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\HARDWARE\route\route.c</FilePath>
             </File>
           </Files>
         </Group>
