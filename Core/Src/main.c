@@ -87,7 +87,7 @@ uint8_t k210_turn=3;//0为左，1为右
 //#define red_light HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_14);
 
 //***************************模式控制***********************************//
-uint8_t g_ucMode = 7; 
+uint8_t g_ucMode = 0; 
 //小车运动模式标志位 0:显示功能、1:PID循迹模式 5:遥控角度闭环
 //***********************************************************************//
 
@@ -329,7 +329,7 @@ int main(void)
   MPU_Init(); //初始化MPU6050
   while(MPU_Init()!=0);//初始化MPU6050模块的MPU 注意初始化阶段不要移动小车
   while(mpu_dmp_init()!=0);//mpu6050,dmp初始化
-  while(g_ucMode==0);//等待K210识别数字
+ 
   while(READ_HW_OUT_5==1);//等待放药品
 	 HAL_Delay(1000);
   delay_count = 0;
@@ -353,10 +353,10 @@ int main(void)
 
 	sprintf((char *)OledString," g_ucMode:%d",g_ucMode);//显示g_ucMode 当前模式
 	OLED_ShowString(0,6,OledString,12);	//显示在OLED上
-	sprintf((char*)OledString, "Mileage:%.2f", Mileage);//显示里程
-	OLED_ShowString(0,1,OledString,12);//这个是oled驱动里面的，是显示位置的一个函数，
-	sprintf((char *)OledString,"y:%.2f  \r\n",yaw);//显示6050数据  航向角
-	OLED_ShowString(0,5,OledString,12);//这个是oled驱动里面的，是显示位置的一个函数，
+//	sprintf((char*)OledString, "Mileage:%.2f", Mileage);//显示里程
+//	OLED_ShowString(0,1,OledString,12);//这个是oled驱动里面的，是显示位置的一个函数，
+//	sprintf((char *)OledString,"y:%.2f  \r\n",yaw);//显示6050数据  航向角
+//	OLED_ShowString(0,5,OledString,12);//这个是oled驱动里面的，是显示位置的一个函数，
 	
 //	sprintf((char *)Usart3String," g_ucMode:%d",g_ucMode);//蓝牙APP显示
 //	HAL_UART_Transmit(&huart3,( uint8_t *)Usart3String,strlen(( const  char  *)Usart3String),50);//阻塞式发送通过串口三输出字符 strlen:计算字符串大小
@@ -570,7 +570,12 @@ int main(void)
 *********************************************************************************************************
 */
 	if(g_ucMode == 6){
-	
+//	sprintf((char *)OledString," g_ucMode:%d",g_ucMode);//显示g_ucMode 当前模式
+//	OLED_ShowString(0,6,OledString,12);	//显示在OLED上
+	sprintf((char*)OledString, "Mileage:%.2f", Mileage);//显示里程
+	OLED_ShowString(0,1,OledString,12);//这个是oled驱动里面的，是显示位置的一个函数，
+	sprintf((char *)OledString,"y:%.2f  \r\n",yaw);//显示6050数据  航向角
+	OLED_ShowString(0,5,OledString,12);//这个是oled驱动里面的，是显示位置的一个函数，
 	
 			
 			switch (mode6_case)
@@ -679,6 +684,12 @@ int main(void)
 */
 
 	if(g_ucMode == 7){
+//	sprintf((char *)OledString," g_ucMode:%d",g_ucMode);//显示g_ucMode 当前模式
+//	OLED_ShowString(0,6,OledString,12);	//显示在OLED上
+	sprintf((char*)OledString, "Mileage:%.2f", Mileage);//显示里程
+	OLED_ShowString(0,1,OledString,12);//这个是oled驱动里面的，是显示位置的一个函数，
+	sprintf((char *)OledString,"y:%.2f  \r\n",yaw);//显示6050数据  航向角
+	OLED_ShowString(0,5,OledString,12);//这个是oled驱动里面的，是显示位置的一个函数，
 	
 	
 			
@@ -745,13 +756,13 @@ int main(void)
 				if (trace_ccrossroad() == 1)
 				{
 					mode7_case = 7;
-					turn_right = 1;
+					turn_left = 1;
 				}
 				break;
 			case 7:
 				if (turn_left == 1)
 				{
-					if (MPU6050_turn(-90,2) == 1)
+					if (MPU6050_turn(90,2) == 1)
 					{
 						turn_left = 0;
 						mode7_case = 8;
@@ -883,6 +894,12 @@ if(g_ucMode == 6)
 *********************************************************************************************************
 */
 			if(g_ucMode == 8){
+//	sprintf((char *)OledString," g_ucMode:%d",g_ucMode);//显示g_ucMode 当前模式
+//	OLED_ShowString(0,6,OledString,12);	//显示在OLED上
+	sprintf((char*)OledString, "Mileage:%.2f", Mileage);//显示里程
+	OLED_ShowString(0,1,OledString,12);//这个是oled驱动里面的，是显示位置的一个函数，
+	sprintf((char *)OledString,"y:%.2f  \r\n",yaw);//显示6050数据  航向角
+	OLED_ShowString(0,5,OledString,12);//这个是oled驱动里面的，是显示位置的一个函数，
 
 				switch(mode8_case)
 				{
@@ -898,7 +915,7 @@ if(g_ucMode == 6)
 						{
 						if(k210_turn==0){
 							mode8_case=11;//中端：k210给左判断
-                          turn_left=1; 
+              turn_left=1; 
 						}
 						
 						else if(k210_turn==1){
