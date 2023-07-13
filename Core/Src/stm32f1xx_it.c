@@ -441,51 +441,35 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
     {
       	if(g_ucUsart1ReceiveData == 'A') {//k210识别数字1
 				g_ucMode=6;
-				turn_left=1;
-				turn_right=1;
-				turn_half=1;
+			
 			}
 			  if(g_ucUsart1ReceiveData == 'B') {//k210识别数字2
 				g_ucMode=7;
-				turn_left=1;
-				turn_right=1;
-				turn_half=1;
+	
 			}
         if(g_ucUsart1ReceiveData == 'C') {//k210识别数字3
         g_ucMode=8;
-				turn_left=1;
-				turn_right=1;
-				turn_half=1;
+		
       }
         if(g_ucUsart1ReceiveData == 'D') {//k210识别数字4
         g_ucMode=8;
-				turn_left=1;
-				turn_right=1;
-				turn_half=1;
+	
       }
         if(g_ucUsart1ReceiveData == 'E') {//k210识别数字5
         g_ucMode=8;
-				turn_left=1;
-				turn_right=1;
-				turn_half=1;
+	
       }
         if(g_ucUsart1ReceiveData == 'F') {//k210识别数字6
         g_ucMode=8;
-				turn_left=1;
-				turn_right=1;
-				turn_half=1;
+			
       }
         if(g_ucUsart1ReceiveData == 'G') {//k210识别数字7
         g_ucMode=8;
-				turn_left=1;
-				turn_right=1;
-				turn_half=1;
+		
       }
         if(g_ucUsart1ReceiveData == 'H') {//k210识别数字8
         g_ucMode=8;
-				turn_left=1;
-				turn_right=1;
-				turn_half=1;
+		
       }
       if(g_ucUsart1ReceiveData == 'L') {//左转90度
        k210_turn=0;
