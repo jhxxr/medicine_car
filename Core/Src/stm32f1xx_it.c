@@ -440,55 +440,6 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 	
     if( huart == &huart1)//判断中断源
     {
-<<<<<<< Updated upstream
-      	if(g_ucUsart1ReceiveData == 'A') {//k210识别数字1
-				g_ucMode=6;
-			
-			}
-			  if(g_ucUsart1ReceiveData == 'B') {//k210识别数字2
-				g_ucMode=7;
-	
-			}
-        if(g_ucUsart1ReceiveData == 'C') {//k210识别数字3
-        g_ucMode=8;
-			
-		
-      }
-        if(g_ucUsart1ReceiveData == 'D') {//k210识别数字4
-        g_ucMode=8;
-			
-	
-      }
-        if(g_ucUsart1ReceiveData == 'E') {//k210识别数字5
-        g_ucMode=8;
-	
-      }
-        if(g_ucUsart1ReceiveData == 'F') {//k210识别数字6
-        g_ucMode=8;
-			
-      }
-        if(g_ucUsart1ReceiveData == 'G') {//k210识别数字7
-        g_ucMode=8;
-		
-      }
-        if(g_ucUsart1ReceiveData == 'H') {//k210识别数字8
-        g_ucMode=8;
-		
-      }
-      if(g_ucUsart1ReceiveData == 'L') {//左转90度
-       k210_turn=0;
-        // while (1)
-        // {
-        //   if(MPU6050_turn(90)==1)break;
-        // } 
-      }
-      if(g_ucUsart1ReceiveData == 'R') {//右转90度
-      k210_turn=1;
-        // while (1)
-        // {
-        //   if(MPU6050_turn(-90)==1)break;
-        // } 
-=======
       switch (g_ucUsart1ReceiveData)
       {
       case 'A'://k210识别数字1
@@ -519,7 +470,6 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
       
       default:
         break;
->>>>>>> Stashed changes
       }
       // 	if(g_ucUsart1ReceiveData == 'A') {//k210识别数字1
 			// 	g_ucMode=6;
