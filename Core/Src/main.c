@@ -239,6 +239,7 @@ void trace_logic(void){
 */
 int MPU6050_turn(int angle,float speed)
 {
+	while(mpu_dmp_get_data(&pitch,&roll,&yaw)!=0){} //读取数据
 	pidMPU6050YawMovement.target_val =yaw+angle;
 	//pidMPU6050YawMovement.target_val =pidMPU6050YawMovement.target_val +angle;
 	// delay_count = 0;
@@ -331,7 +332,7 @@ int main(void)
   while(mpu_dmp_init()!=0);//mpu6050,dmp初始化
  
   while(READ_HW_OUT_5==1);//等待放药品
-	 HAL_Delay(1000);
+  HAL_Delay(1000);
   delay_count = 0;
   delay_count_start = 1;
 
@@ -595,7 +596,7 @@ int main(void)
 			case 2:
 				if (turn_left == 1)
 				{
-					if (MPU6050_turn(-90,2) == 1)
+					if (MPU6050_turn(90,2) == 1)
 					{
 						turn_left = 0;
 						mode6_case = 3;
@@ -710,7 +711,7 @@ int main(void)
 			case 2:
 				if (turn_right == 1)
 				{
-					if (MPU6050_turn(90,2) == 1)
+					if (MPU6050_turn(-90,2) == 1)
 					{
 						turn_right = 0;
 						mode7_case = 3;
@@ -760,7 +761,7 @@ int main(void)
 				}
 				break;
 			case 7:
-				if (turn_left == 1)
+				if (turn_right == 1)
 				{
 					if (MPU6050_turn(90,2) == 1)
 					{
