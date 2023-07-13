@@ -757,7 +757,7 @@ int main(void)
 				if (trace_ccrossroad() == 1)
 				{
 					mode7_case = 7;
-					turn_left = 1;
+					turn_right = 1;
 				}
 				break;
 			case 7:

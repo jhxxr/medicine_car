@@ -1,0 +1,35 @@
+# Ignore backup files
+*.bak
+*.ddk
+*.edk
+*.lst
+*.lnp
+*.mpf
+*.mpj
+*.obj
+*.omf
+*.log
+*.hex
+
+# Ignore plugin files
+*.plg
+*.rpt
+*.tmp
+*.__i
+*.crf
+*.o
+*.d
+*.axf
+*.tra
+*.dep
+JLinkLog.txt
+
+# Ignore generated files
+*.iex
+*.htm
+*.sct
+*.map
+
+# Ignore debug configuration files
+*.dbgconf
+*.Administrator
