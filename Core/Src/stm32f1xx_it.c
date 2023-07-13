@@ -449,10 +449,12 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 			}
         if(g_ucUsart1ReceiveData == 'C') {//k210识别数字3
         g_ucMode=8;
+			
 		
       }
         if(g_ucUsart1ReceiveData == 'D') {//k210识别数字4
         g_ucMode=8;
+			
 	
       }
         if(g_ucUsart1ReceiveData == 'E') {//k210识别数字5
