@@ -761,7 +761,7 @@ int main(void)
 				}
 				break;
 			case 7:
-				if (turn_right == 1)
+				if (turn_left == 1)
 				{
 					if (MPU6050_turn(90,2) == 1)
 					{
@@ -916,7 +916,7 @@ if(g_ucMode == 6)
 						{
 						if(k210_turn==0){
 							mode8_case=11;//中端：k210给左判断
-              turn_left=1; 
+                           turn_left=1; 
 						}
 						
 						else if(k210_turn==1){
@@ -924,11 +924,17 @@ if(g_ucMode == 6)
 							 turn_right=1;
 				 
 						}						
+						else if(k210_turn==3){
+						mode8_case=3;//远端
+							Mileage=0;
+							
+						}
 						else{
 						mode8_case=3;//远端
-						k210_turn=3;
+						
+						}
 				        						
-						}}						
+						}					
 					    break;	
 						
 						
@@ -936,7 +942,7 @@ if(g_ucMode == 6)
 					 /*******************************  中端左边  ******************************************/
 					case 11:
                   if(turn_left==1){
-								if(MPU6050_turn(-90,2)==1)
+								if(MPU6050_turn(90,2)==1)
 								{
 									turn_left=0;
 									mode8_case=12;				
@@ -996,7 +1002,7 @@ if(g_ucMode == 6)
 							break;
 					case 17:
 					       trace_logic();
-					     if (trace_ccrossroad() == 1&&Mileage>170)//跳过第一个十字路口
+					     if (trace_ccrossroad() == 1&&Mileage>160)//跳过第一个十字路口
 							{
 								mode8_case = 18;
 								turn_half = 1;
@@ -1017,7 +1023,7 @@ if(g_ucMode == 6)
 				    /*******************************  中端右边  ******************************************/
 					case 21:
                               if(turn_right==1){
-								if(MPU6050_turn(90,2)==1)
+								if(MPU6050_turn(-90,2)==1)
 								{
 									turn_right=0;
 									mode8_case=22;				
@@ -1029,8 +1035,7 @@ if(g_ucMode == 6)
 								{
 									mode8_case = 23;
 									turn_half = 1;									
-									motorPidSetSpeed(0, 0);
-									HAL_GPIO_WritePin (GPIOB, GPIO_PIN_14, GPIO_PIN_SET);//亮红灯
+									
 								}
 								break;
 					case 23:
@@ -1077,7 +1082,7 @@ if(g_ucMode == 6)
 							break;
 					case 27:
 					       trace_logic();
-					     if (trace_ccrossroad() == 1&&Mileage>170)//跳过第一个十字路口
+					     if (trace_ccrossroad() == 1&&Mileage>160)//跳过第一个十字路口
 							{
 								mode8_case = 28;
 								turn_half = 1;
@@ -1097,7 +1102,7 @@ if(g_ucMode == 6)
         /*******************************  远端  ******************************************/
 					case 3:
 					   trace_logic();
-					   if(trace_ccrossroad()==1){
+					   if(trace_ccrossroad()==1&&Mileage>50){
 						if(k210_turn==0){
 							mode8_case=31;//远端第一个T字：k210给左判断
                           turn_left=1; 
@@ -1114,7 +1119,7 @@ if(g_ucMode == 6)
 					case 31:
 						if (turn_left == 1)
 						{
-							if (MPU6050_turn(-90,2) == 1)
+							if (MPU6050_turn(90,2) == 1)
 							{
 								turn_left = 0;
 								mode8_case=311;
@@ -1140,7 +1145,7 @@ if(g_ucMode == 6)
 						    case 3111:
 							if (turn_left == 1)
 								{
-								if (MPU6050_turn(-90,2) == 1)
+								if (MPU6050_turn(90,2) == 1)
 								{
 									turn_left = 0;
 									mode8_case = 31110;
@@ -1224,7 +1229,7 @@ if(g_ucMode == 6)
 										break;
 								case 31118:
 								         trace_logic();
-										if (trace_ccrossroad() == 1&&Mileage>170)
+										if (trace_ccrossroad() == 1&&Mileage>160)
 										{
 											mode8_case = 31119;
 											turn_half = 1;
@@ -1246,7 +1251,7 @@ if(g_ucMode == 6)
 								case 3112:
 							if (turn_right == 1)
 								{
-								if (MPU6050_turn(90,2) == 1)
+								if (MPU6050_turn(-90,2) == 1)
 								{
 									turn_right = 0;
 									mode8_case = 31120;
@@ -1354,7 +1359,7 @@ if(g_ucMode == 6)
 					case 32:
 						if (turn_right == 1)
 						{
-							if (MPU6050_turn(90,2) == 1)
+							if (MPU6050_turn(-90,2) == 1)
 							{
 								turn_right = 0;
 								mode8_case=321;
@@ -1370,7 +1375,7 @@ if(g_ucMode == 6)
 							k210_turn=3;//清一下k210判断标志
 							}
 							else{
-								mode8_case=3112;//远端第二个T字：k210给右判断
+								mode8_case=3212;//远端第二个T字：k210给右判断
 							turn_right=1; 
 							k210_turn=3;//清一下k210判断标志
 							}
@@ -1380,7 +1385,7 @@ if(g_ucMode == 6)
 						    case 3211:
 							if (turn_left == 1)
 								{
-								if (MPU6050_turn(-90,2) == 1)
+								if (MPU6050_turn(90,2) == 1)
 								{
 									turn_left = 0;
 									mode8_case = 32110;
@@ -1416,7 +1421,7 @@ if(g_ucMode == 6)
 									}
 									HAL_GPIO_WritePin (GPIOB, GPIO_PIN_14, GPIO_PIN_RESET);
 									motorPidSetSpeed(2,2);
-									mode8_case = 31113;
+									mode8_case = 32113;
 								case 32113:
 								trace_logic();
 									if (trace_ccrossroad() == 1)
@@ -1428,7 +1433,7 @@ if(g_ucMode == 6)
 								case 32114:	
 									if (turn_right == 1)
 										{
-											if (MPU6050_turn(90,2) == 1)
+											if (MPU6050_turn(-90,2) == 1)
 											{
 												turn_right = 0;
 												mode8_case = 32115;
@@ -1446,7 +1451,7 @@ if(g_ucMode == 6)
 								case 32116:	
 									if (turn_left == 1)
 										{
-											if (MPU6050_turn(-90,2) == 1)
+											if (MPU6050_turn(90,2) == 1)
 											{
 												turn_left = 0;
 												mode8_case = 32117;
@@ -1464,7 +1469,7 @@ if(g_ucMode == 6)
 										break;
 								case 32118:
 								         trace_logic();
-										if (trace_ccrossroad() == 1&&Mileage>170)
+										if (trace_ccrossroad() == 1&&Mileage>160)
 										{
 											mode8_case = 32119;
 											turn_half = 1;
@@ -1486,10 +1491,10 @@ if(g_ucMode == 6)
 								case 3212:
 							if (turn_right == 1)
 								{
-								if (MPU6050_turn(90,2) == 1)
+								if (MPU6050_turn(-90,2) == 1)
 								{
 									turn_right = 0;
-									mode8_case = 31120;
+									mode8_case = 32120;
 								}
 								}
 								break;
@@ -1535,7 +1540,7 @@ if(g_ucMode == 6)
 								case 32124:	
 									if (turn_left == 1)
 										{
-											if (MPU6050_turn(-90,2) == 1)
+											if (MPU6050_turn(90,2) == 1)
 											{
 												turn_left = 0;
 												mode8_case = 32125;
@@ -1553,7 +1558,7 @@ if(g_ucMode == 6)
 								case 32126:	
 									if (turn_left == 1)
 										{
-											if (MPU6050_turn(-90,2) == 1)
+											if (MPU6050_turn(90,2) == 1)
 											{
 												turn_left = 0;
 												mode8_case = 32127;
