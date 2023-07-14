@@ -14,7 +14,6 @@ typedef struct
   int route8[6];
 } fixturn;
 void regular_init(void);
-void array_reverse(int *array);
-
+int array_reverse(int *array);
 
 

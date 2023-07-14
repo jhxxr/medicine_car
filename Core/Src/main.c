@@ -80,7 +80,7 @@ extern uint16_t delay_count;
 // uint8_t turn_right=1;
 // uint8_t turn_half=1;
 // uint8_t flag=0;
-// uint8_t k210_turn=5;
+uint8_t k210_turn=3;
 uint8_t this_number=0;
 int this_route[6]={3,3,3,3,3,3};
 
@@ -314,7 +314,7 @@ void turn_right(void)
 {
 	while (1)
 	{
-		if(MPU6050_turn(90,2) == 1)
+		if(MPU6050_turn(-90,2) == 1)
 		{
 			break;
 		}
@@ -326,10 +326,12 @@ void turn_right(void)
 //掉头
 void turn_back(void)
 {
+	motorPidSetSpeed(0, 0);
 	while (1)
 	{
-		if(MPU6050_turn(180,1) == 1)
+		if(MPU6050_turn(180,0) == 1)
 		{
+			motorPidSetSpeed(0, 0);
 			break;
 		}
 	}
@@ -342,7 +344,8 @@ void lock_position(void)
 	Mileage = 0;
 	while (1)
 	{
-		if(Mileage>=10)
+		MPU6050_turn(0,5);
+		if(Mileage>=8)
 		{
 			break;
 		}
@@ -446,6 +449,9 @@ int main(void)
 
 	sprintf((char *)OledString," g_ucMode:%d",g_ucMode);//显示g_ucMode 当前模式
 	OLED_ShowString(0,6,OledString,12);	//显示在OLED上
+	sprintf((char*)OledString, "is:%d", this_route[0]);//显示速度
+	OLED_ShowString(0,0,OledString,12);//这个是oled驱动里面的，是显示位置的一个函数，
+
 //	sprintf((char*)OledString, "Mileage:%.2f", Mileage);//显示里程
 //	OLED_ShowString(0,1,OledString,12);//这个是oled驱动里面的，是显示位置的一个函数，
 //	sprintf((char *)OledString,"y:%.2f  \r\n",yaw);//显示6050数据  航向角
@@ -512,12 +518,18 @@ int main(void)
 	if(g_ucMode == 1)
 	{
 		//读取this_route，如果是0，则在trace_ccrossroad() = 1时左转，如果是1，则在trace_ccrossroad() = 1时右转，如果是2，则在trace_ccrossroad() = 1时直行，如果是3，则在trace_ccrossroad() = 1时掉头。
-
+		while (1)
+		{
+			if(k210_turn!=2){
+				break;
+			}          
+		}
 		
 		switch (mode1_case)
 		{
 			case 0:
 				motorPidSetSpeed(0, 0);//停止
+				HAL_GPIO_WritePin (GPIOC, GPIO_PIN_15, GPIO_PIN_SET);//亮绿灯
 				break;
 			case 10:
 				motorPidSetSpeed(2, 2);
@@ -542,12 +554,21 @@ int main(void)
 					}
 					else if(this_route[0] == 3)
 					{
-						turn_back();
+						
 						if(is_done == 1){
-							array_reverse(this_route);
+							turn_back();
+							while(array_reverse(this_route)==0);
+							
+							HAL_GPIO_WritePin (GPIOB, GPIO_PIN_14, GPIO_PIN_SET);//亮红灯
+							while (READ_HW_OUT_5==0);
+							HAL_GPIO_WritePin (GPIOB, GPIO_PIN_14, GPIO_PIN_RESET);	
+							is_done = 0;
+							mode1_case=50;
+
 						}
 						else{
-							is_done = 0;
+							turn_back();
+							
 							mode1_case=0;
 						}
 					}
@@ -576,12 +597,20 @@ int main(void)
 					}
 					else if(this_route[1] == 3)
 					{
-						turn_back();
+						
 						if(is_done == 1){
-							array_reverse(this_route);
+							turn_back();
+							while(array_reverse(this_route)==0);
+							
+							HAL_GPIO_WritePin (GPIOB, GPIO_PIN_14, GPIO_PIN_SET);//亮红灯
+							while (READ_HW_OUT_5==0);
+							HAL_GPIO_WritePin (GPIOB, GPIO_PIN_14, GPIO_PIN_RESET);	
+							is_done = 0;
+							mode1_case=50;
 						}
 						else{
-							is_done = 0;
+							turn_back();
+							
 							mode1_case=0;
 						}
 					}
@@ -610,12 +639,20 @@ int main(void)
 					}
 					else if(this_route[2] == 3)
 					{
-						turn_back();
+						
 						if(is_done == 1){
-							array_reverse(this_route);
+							turn_back();
+							while(array_reverse(this_route)==0);
+							
+							HAL_GPIO_WritePin (GPIOB, GPIO_PIN_14, GPIO_PIN_SET);//亮红灯
+							while (READ_HW_OUT_5==0);
+							HAL_GPIO_WritePin (GPIOB, GPIO_PIN_14, GPIO_PIN_RESET);	
+							is_done = 0;
+							mode1_case=50;
 						}
 						else{
-							is_done = 0;
+							turn_back();
+							
 							mode1_case=0;
 						}
 					}
@@ -644,12 +681,20 @@ int main(void)
 					}
 					else if(this_route[3] == 3)
 					{
-						turn_back();
+						
 						if(is_done == 1){
-							array_reverse(this_route);
+							turn_back();
+							while(array_reverse(this_route)==0);
+							
+							HAL_GPIO_WritePin (GPIOB, GPIO_PIN_14, GPIO_PIN_SET);//亮红灯
+							while (READ_HW_OUT_5==0);
+							HAL_GPIO_WritePin (GPIOB, GPIO_PIN_14, GPIO_PIN_RESET);	
+							is_done = 0;
+							mode1_case=50;
 						}
 						else{
-							is_done = 0;
+							turn_back();
+							
 							mode1_case=0;
 						}
 					}
@@ -678,12 +723,20 @@ int main(void)
 					}
 					else if(this_route[4] == 3)
 					{
-						turn_back();
+						
 						if(is_done == 1){
-							array_reverse(this_route);
+							turn_back();
+							while(array_reverse(this_route)==0);
+							
+							HAL_GPIO_WritePin (GPIOB, GPIO_PIN_14, GPIO_PIN_SET);//亮红灯
+							while (READ_HW_OUT_5==0);
+							HAL_GPIO_WritePin (GPIOB, GPIO_PIN_14, GPIO_PIN_RESET);	
+							is_done = 0;
+							mode1_case=50;
 						}
 						else{
-							is_done = 0;
+							turn_back();
+							
 							mode1_case=0;
 						}
 					}
@@ -712,18 +765,282 @@ int main(void)
 					}
 					else if(this_route[5] == 3)
 					{
-						turn_back();
+						
 						if(is_done == 1){
-							array_reverse(this_route);
+							turn_back();
+							while(array_reverse(this_route)==0);
+							
+							HAL_GPIO_WritePin (GPIOB, GPIO_PIN_14, GPIO_PIN_SET);//亮红灯
+							while (READ_HW_OUT_5==0);
+							HAL_GPIO_WritePin (GPIOB, GPIO_PIN_14, GPIO_PIN_RESET);	
+							is_done = 0;
+							mode1_case=50;
 						}
 						else{
-							is_done = 0;
+							turn_back();
+							
 							mode1_case=0;
 						}
 					}
 				}
 				break;
-			case 22:
+
+
+
+			case 50:
+				motorPidSetSpeed(2, 2);
+				mode1_case++;
+				break;
+			case 51:
+				trace_logic();
+				if (trace_ccrossroad() == 1)
+				{
+					mode1_case ++;
+					if(this_route[0] == 0)
+					{
+						turn_left();
+					}
+					else if(this_route[0] == 1)
+					{
+						turn_right();
+					}
+					else if(this_route[0] == 2)
+					{
+						lock_position();
+					}
+					else if(this_route[0] == 3)
+					{
+						
+						if(is_done == 1){
+							turn_back();
+							while(array_reverse(this_route)==0);
+
+							HAL_GPIO_WritePin (GPIOB, GPIO_PIN_14, GPIO_PIN_SET);//亮红灯
+							while (READ_HW_OUT_5==0);
+							HAL_GPIO_WritePin (GPIOB, GPIO_PIN_14, GPIO_PIN_RESET);	
+							is_done = 0;
+							mode1_case=12;
+
+						}
+						else{
+							turn_back();
+							
+							mode1_case=0;
+						}
+					}
+				}
+				break;
+			case 52:
+				motorPidSetSpeed(2, 2);
+				mode1_case++;
+				break;
+			case 53:
+				trace_logic();
+				if (trace_ccrossroad() == 1)
+				{
+					mode1_case ++;
+					if(this_route[1] == 0)
+					{
+						turn_left();
+					}
+					else if(this_route[1] == 1)
+					{
+						turn_right();
+					}
+					else if(this_route[1] == 2)
+					{
+						lock_position();
+					}
+					else if(this_route[1] == 3)
+					{
+						
+						if(is_done == 1){
+							turn_back();
+							while(array_reverse(this_route)==0);
+							
+							HAL_GPIO_WritePin (GPIOB, GPIO_PIN_14, GPIO_PIN_SET);//亮红灯
+							while (READ_HW_OUT_5==0);
+							HAL_GPIO_WritePin (GPIOB, GPIO_PIN_14, GPIO_PIN_RESET);	
+							is_done = 0;
+							mode1_case=14;
+						}
+						else{
+							turn_back();
+							
+							mode1_case=0;
+						}
+					}
+				}
+				break;
+			case 54:
+				motorPidSetSpeed(2, 2);
+				mode1_case++;
+				break;
+			case 55:
+				trace_logic();
+				if (trace_ccrossroad() == 1)
+				{
+					mode1_case ++;
+					if(this_route[2] == 0)
+					{
+						turn_left();
+					}
+					else if(this_route[2] == 1)
+					{
+						turn_right();
+					}
+					else if(this_route[2] == 2)
+					{
+						lock_position();
+					}
+					else if(this_route[2] == 3)
+					{
+						
+						if(is_done == 1){
+							turn_back();
+							array_reverse(this_route);
+							
+							HAL_GPIO_WritePin (GPIOB, GPIO_PIN_14, GPIO_PIN_SET);//亮红灯
+							while (READ_HW_OUT_5==0);
+							HAL_GPIO_WritePin (GPIOB, GPIO_PIN_14, GPIO_PIN_RESET);	
+							is_done = 0;
+							mode1_case=16;
+						}
+						else{
+							turn_back();
+							
+							mode1_case=0;
+						}
+					}
+				}
+				break;
+			case 56:
+				motorPidSetSpeed(2, 2);
+				mode1_case++;
+				break;
+			case 57:
+				trace_logic();
+				if (trace_ccrossroad() == 1)
+				{
+					mode1_case ++;
+					if(this_route[3] == 0)
+					{
+						turn_left();
+					}
+					else if(this_route[3] == 1)
+					{
+						turn_right();
+					}
+					else if(this_route[3] == 2)
+					{
+						lock_position();
+					}
+					else if(this_route[3] == 3)
+					{
+						
+						if(is_done == 1){
+							turn_back();
+							array_reverse(this_route);
+							
+							HAL_GPIO_WritePin (GPIOB, GPIO_PIN_14, GPIO_PIN_SET);//亮红灯
+							while (READ_HW_OUT_5==0);
+							HAL_GPIO_WritePin (GPIOB, GPIO_PIN_14, GPIO_PIN_RESET);	
+							is_done = 0;
+							mode1_case=18;
+						}
+						else{
+							turn_back();
+							
+							mode1_case=0;
+						}
+					}
+				}
+				break;
+			case 58:
+				motorPidSetSpeed(2, 2);
+				mode1_case++;
+				break;
+			case 59:
+				trace_logic();
+				if (trace_ccrossroad() == 1)
+				{
+					mode1_case ++;
+					if(this_route[4] == 0)
+					{
+						turn_left();
+					}
+					else if(this_route[4] == 1)
+					{
+						turn_right();
+					}
+					else if(this_route[4] == 2)
+					{
+						lock_position();
+					}
+					else if(this_route[4] == 3)
+					{
+						
+						if(is_done == 1){
+							turn_back();
+							array_reverse(this_route);
+							
+							HAL_GPIO_WritePin (GPIOB, GPIO_PIN_14, GPIO_PIN_SET);//亮红灯
+							while (READ_HW_OUT_5==0);
+							HAL_GPIO_WritePin (GPIOB, GPIO_PIN_14, GPIO_PIN_RESET);	
+							is_done = 0;
+							mode1_case=20;
+						}
+						else{
+							turn_back();
+							
+							mode1_case=0;
+						}
+					}
+				}
+				break;
+			case 60:
+				motorPidSetSpeed(2, 2);
+				mode1_case++;
+				break;
+			case 61:
+				trace_logic();
+				if (trace_ccrossroad() == 1)
+				{
+					mode1_case ++;
+					if(this_route[5] == 0)
+					{
+						turn_left();
+					}
+					else if(this_route[5] == 1)
+					{
+						turn_right();
+					}
+					else if(this_route[5] == 2)
+					{
+						lock_position();
+					}
+					else if(this_route[5] == 3)
+					{
+						
+						if(is_done == 1){
+							turn_back();
+							array_reverse(this_route);
+							
+							HAL_GPIO_WritePin (GPIOB, GPIO_PIN_14, GPIO_PIN_SET);//亮红灯
+							while (READ_HW_OUT_5==0);
+							HAL_GPIO_WritePin (GPIOB, GPIO_PIN_14, GPIO_PIN_RESET);	
+							is_done = 0;
+							mode1_case=22;
+						}
+						else{
+							turn_back();
+							
+							mode1_case=0;
+						}
+					}
+				}
+				break;
+			case 62:
 				motorPidSetSpeed(2, 2);
 				mode1_case++;
 				break;
@@ -1105,7 +1422,7 @@ int main(void)
 // 				{
 					
 // 				}
-// 				HAL_GPIO_WritePin (GPIOB, GPIO_PIN_14, GPIO_PIN_RESET);	
+// 				
 // 				motorPidSetSpeed(2,2);
 // 				mode7_case = 6;
 // 			case 6:

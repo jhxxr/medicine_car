@@ -70,7 +70,7 @@ extern uint8_t g_ucMode;//当前模式变量
 // extern uint8_t turn_left;
 // extern uint8_t turn_right;
 // extern uint8_t turn_half;
-// extern uint8_t k210_turn;
+extern uint8_t k210_turn;
 extern uint8_t this_number;
 
 /* USER CODE END PM */
@@ -444,28 +444,54 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
       {
       case 'A'://k210识别数字1
         this_number=1;
+        g_ucMode=1;
           break;
       case 'B'://k210识别数字2
         this_number=2;
+        g_ucMode=1;
           break;
       case 'C'://k210识别数字3
         this_number=3;
+        g_ucMode=1;
           break;
       case 'D'://k210识别数字4
         this_number=4;
+        g_ucMode=1;
           break;
       case 'E'://k210识别数字5
         this_number=5;
+        g_ucMode=1;
           break;
       case 'F'://k210识别数字6
         this_number=6;
+        g_ucMode=1;
           break;
       case 'G'://k210识别数字7
         this_number=7;
+        g_ucMode=1;
           break;
       case 'H'://k210识别数字8
         this_number=8;
+        g_ucMode=1;
           break;
+      case 'Z'://识别到数字，减速speedcar=1.5
+        k210_turn=2;
+
+        break;
+      case 'Y'://没有数字，正常速度
+        speedcar=1;
+        break;
+      case 'X'://识别到无用数字
+        k210_turn=3;
+        break;
+      case 'L':
+        k210_turn=0;
+        break;
+      case 'R':
+        k210_turn=1;
+        break;
+
+          
 
       
       default:
