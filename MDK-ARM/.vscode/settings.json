@@ -9,6 +9,7 @@
         "main.h": "c",
         "route.h": "c",
         "stdio.h": "c",
-        "stm32f1xx_hal.h": "c"
+        "stm32f1xx_hal.h": "c",
+        "stm32f1xx_it.h": "c"
     }
 }

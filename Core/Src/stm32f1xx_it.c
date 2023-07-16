@@ -72,7 +72,9 @@ extern uint8_t g_ucMode;//当前模式变量
 // extern uint8_t turn_half;
 extern uint8_t k210_turn;
 extern uint8_t this_number;
-
+extern uint8_t digital_identification;
+extern uint8_t this_step;
+extern int this_route[6];
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
@@ -475,8 +477,13 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
         g_ucMode=1;
           break;
       case 'Z'://识别到数字，减速speedcar=1.5
-        k210_turn=2;
-
+        if(digital_identification==0){
+          g_ucMode=3;
+          k210_turn=2;
+          digital_identification=1;
+        }
+        
+        
         break;
       case 'Y'://没有数字，正常速度
         speedcar=1;
@@ -485,9 +492,13 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
         k210_turn=3;
         break;
       case 'L':
+        g_ucMode=1;
+        this_route[this_step]=0;
         k210_turn=0;
         break;
       case 'R':
+        g_ucMode=1;
+        this_route[this_step]=1;
         k210_turn=1;
         break;
 

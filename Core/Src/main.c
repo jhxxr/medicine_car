@@ -15,7 +15,7 @@
 #include "motor.h"
 #include "niming.h"
 #include "pid.h"
-
+#include "stm32f1xx_it.h"
 #include "cJSON.h"
 #include <string.h>
 #include <stdio.h>
@@ -82,8 +82,10 @@ extern uint16_t delay_count;
 // uint8_t flag=0;
 uint8_t k210_turn=3;
 uint8_t this_number=0;
-int this_route[6]={3,3,3,3,3,3};
-
+int this_route[6]={2,2,3,3,3,3};
+extern float speedcar;
+uint8_t digital_identification=0;//数字识别，防止多次停车
+uint8_t this_step=0;
 //#define Drug_testing HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_14);
 //#define green_light HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_15);
 //#define red_light HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_14);
@@ -354,7 +356,29 @@ void lock_position(void)
 }
 
 
-
+/*
+****************************************************************************
+* 函数名称: lock_position_speed
+* 函数作用: 变速，直行一定距离
+* 输入参数: sudu:速度，jili:距离
+* 输出参数: 无
+****************************************************************************
+*/
+void lock_position_speed(uint8_t sudu,uint8_t jili)
+{
+	speedcar=sudu;
+	Mileage = 0;
+	while (1)
+	{
+		MPU6050_turn(0,3);
+		if(Mileage>=jili)
+		{
+			speedcar=1;
+			break;
+		}
+	}
+	
+}
 
 
 
@@ -518,12 +542,6 @@ int main(void)
 	if(g_ucMode == 1)
 	{
 		//读取this_route，如果是0，则在trace_ccrossroad() = 1时左转，如果是1，则在trace_ccrossroad() = 1时右转，如果是2，则在trace_ccrossroad() = 1时直行，如果是3，则在trace_ccrossroad() = 1时掉头。
-		while (1)
-		{
-			if(k210_turn!=2){
-				break;
-			}          
-		}
 		
 		switch (mode1_case)
 		{
@@ -533,13 +551,15 @@ int main(void)
 				break;
 			case 10:
 				motorPidSetSpeed(2, 2);
-				mode1_case++;
+				this_step = 0;
+				mode1_case=11;
 				break;
 			case 11:
 				trace_logic();
 				if (trace_ccrossroad() == 1)
 				{
-					mode1_case ++;
+
+					mode1_case=12;
 					if(this_route[0] == 0)
 					{
 						turn_left();
@@ -576,13 +596,14 @@ int main(void)
 				break;
 			case 12:
 				motorPidSetSpeed(2, 2);
-				mode1_case++;
+				this_step = 1;
+				mode1_case=13;
 				break;
 			case 13:
 				trace_logic();
 				if (trace_ccrossroad() == 1)
 				{
-					mode1_case ++;
+					mode1_case=14;
 					if(this_route[1] == 0)
 					{
 						turn_left();
@@ -618,13 +639,14 @@ int main(void)
 				break;
 			case 14:
 				motorPidSetSpeed(2, 2);
-				mode1_case++;
+				this_step = 2;
+				mode1_case=15;
 				break;
 			case 15:
 				trace_logic();
 				if (trace_ccrossroad() == 1)
 				{
-					mode1_case ++;
+					mode1_case=16;
 					if(this_route[2] == 0)
 					{
 						turn_left();
@@ -660,13 +682,14 @@ int main(void)
 				break;
 			case 16:
 				motorPidSetSpeed(2, 2);
-				mode1_case++;
+				this_step = 3;
+				mode1_case=17;
 				break;
 			case 17:
 				trace_logic();
 				if (trace_ccrossroad() == 1)
 				{
-					mode1_case ++;
+					mode1_case=18;
 					if(this_route[3] == 0)
 					{
 						turn_left();
@@ -702,13 +725,14 @@ int main(void)
 				break;
 			case 18:
 				motorPidSetSpeed(2, 2);
-				mode1_case++;
+				this_step = 4;
+				mode1_case=19;
 				break;
 			case 19:
 				trace_logic();
 				if (trace_ccrossroad() == 1)
 				{
-					mode1_case ++;
+					mode1_case = 20	;
 					if(this_route[4] == 0)
 					{
 						turn_left();
@@ -744,13 +768,14 @@ int main(void)
 				break;
 			case 20:
 				motorPidSetSpeed(2, 2);
-				mode1_case++;
+				this_step = 5;
+				mode1_case=21;
 				break;
 			case 21:
 				trace_logic();
 				if (trace_ccrossroad() == 1)
 				{
-					mode1_case ++;
+					mode1_case = 22;
 					if(this_route[5] == 0)
 					{
 						turn_left();
@@ -789,13 +814,14 @@ int main(void)
 
 			case 50:
 				motorPidSetSpeed(2, 2);
-				mode1_case++;
+				this_step = 0;
+				mode1_case	= 51;
 				break;
 			case 51:
 				trace_logic();
 				if (trace_ccrossroad() == 1)
 				{
-					mode1_case ++;
+					mode1_case= 52;
 					if(this_route[0] == 0)
 					{
 						turn_left();
@@ -832,13 +858,14 @@ int main(void)
 				break;
 			case 52:
 				motorPidSetSpeed(2, 2);
-				mode1_case++;
+				this_step = 1;
+				mode1_case= 53;
 				break;
 			case 53:
 				trace_logic();
 				if (trace_ccrossroad() == 1)
 				{
-					mode1_case ++;
+					mode1_case = 54;
 					if(this_route[1] == 0)
 					{
 						turn_left();
@@ -874,13 +901,14 @@ int main(void)
 				break;
 			case 54:
 				motorPidSetSpeed(2, 2);
-				mode1_case++;
+				this_step = 2;
+				mode1_case	= 55;
 				break;
 			case 55:
 				trace_logic();
 				if (trace_ccrossroad() == 1)
 				{
-					mode1_case ++;
+					mode1_case = 56;
 					if(this_route[2] == 0)
 					{
 						turn_left();
@@ -916,13 +944,14 @@ int main(void)
 				break;
 			case 56:
 				motorPidSetSpeed(2, 2);
-				mode1_case++;
+				this_step = 3;
+				mode1_case	= 57;
 				break;
 			case 57:
 				trace_logic();
 				if (trace_ccrossroad() == 1)
 				{
-					mode1_case ++;
+					mode1_case	= 58;
 					if(this_route[3] == 0)
 					{
 						turn_left();
@@ -958,13 +987,14 @@ int main(void)
 				break;
 			case 58:
 				motorPidSetSpeed(2, 2);
-				mode1_case++;
+				this_step = 4;
+				mode1_case	= 59;
 				break;
 			case 59:
 				trace_logic();
 				if (trace_ccrossroad() == 1)
 				{
-					mode1_case ++;
+					mode1_case = 60;
 					if(this_route[4] == 0)
 					{
 						turn_left();
@@ -1000,13 +1030,14 @@ int main(void)
 				break;
 			case 60:
 				motorPidSetSpeed(2, 2);
-				mode1_case++;
+				this_step = 5;
+				mode1_case	= 61;
 				break;
 			case 61:
 				trace_logic();
 				if (trace_ccrossroad() == 1)
 				{
-					mode1_case ++;
+					mode1_case = 62;
 					if(this_route[5] == 0)
 					{
 						turn_left();
@@ -1042,7 +1073,7 @@ int main(void)
 				break;
 			case 62:
 				motorPidSetSpeed(2, 2);
-				mode1_case++;
+				mode1_case	= 63;
 				break;
 			default:
 				break;
@@ -1051,7 +1082,14 @@ int main(void)
 
 	}
 
+	if(g_ucMode == 3)
+	{
+		sprintf((char *)OledString,"target:%.2f \r\n",pidMPU6050YawMovement.target_val);//
+		OLED_ShowString(0,1,OledString,12);//这个是oled驱动里面的，是显示位置的一个函数，
+		motorPidSetSpeed(0,0);//停车
 
+		
+	}
 
 
 
