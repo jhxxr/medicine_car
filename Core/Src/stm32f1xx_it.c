@@ -49,10 +49,10 @@ short Encode2Count = 0;//电机2编码器计数值 short的类型
 float Motor1Speed = 0.00;//电机1速度 转/s
 float Motor2Speed = 0.00;//电机2速度 转/s
 uint16_t TimerCount = 0;//中断计数变量
-float speedcar=1;
+float speedcar=1.2;
 
 uint16_t delay_count = 0; //延时计数器
-extern uint8_t delay_count_start;
+uint8_t delay_count_start=0;
 
 // uint8_t Usart1_ReadBuf[256];	//串口1 缓冲数组
 // uint8_t Usart1_ReadCount = 0;	//串口1 接收字节计数
@@ -449,11 +449,13 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 			}
         if(g_ucUsart1ReceiveData == 'C') {//k210识别数字3
         g_ucMode=8;
+				
 			
 		
       }
         if(g_ucUsart1ReceiveData == 'D') {//k210识别数字4
         g_ucMode=8;
+					
 			
 	
       }
@@ -487,6 +489,16 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
         //   if(MPU6050_turn(-90)==1)break;
         // } 
       }
+//			if(g_ucUsart1ReceiveData == 'Z') {//k210识别看到数字,减速
+//       speedcar=2;
+//		
+//      }
+//			if(g_ucUsart1ReceiveData == 'Y') {//k210看不到数字，回正常速度
+//        speedcar=1.2;
+//		
+//      }
+			
+			
 			
       // if(g_ucUsart1ReceiveData == 'C') motorPidSetSpeed(0,0);//停止
       // if(g_ucUsart1ReceiveData == 'D') motorPidSetSpeed(1,2);//右边运动	

@@ -74,13 +74,14 @@ float  g_fMPU6050YawMovePidOut = 0.00f; //姿态PID运算输出
 float  g_fMPU6050YawMovePidOut1 = 0.00f; //第一个电机控制输出
 float  g_fMPU6050YawMovePidOut2 = 0.00f; //第一个电机控制输出
 
-uint8_t delay_count_start = 0;
+extern uint8_t delay_count_start;
 extern uint16_t delay_count;
 uint8_t turn_left;
 uint8_t turn_right;
 uint8_t turn_half;
 uint8_t flag=0;
 uint8_t k210_turn=3;//0为左，1为右
+extern float speedcar;
 
 //#define Drug_testing HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_14);
 //#define green_light HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_15);
@@ -261,7 +262,27 @@ int MPU6050_turn(int angle,float speed)
 	}
 	return 1;
 }
-
+/*
+*********************************************************************************************************
+*	函 数 名: lock_position
+*	功能说明: 直行
+*	形    参：无
+*	返 回 值: 1
+*********************************************************************************************************
+*/
+void lock_position(uint8_t juli)
+{
+	Mileage = 0;
+	while (1)
+	{
+		MPU6050_turn(0,2);
+		if(Mileage>=juli)
+		{
+			break;
+		}
+	}
+	
+}
 
 
 
@@ -277,9 +298,10 @@ int main(void)
   /* USER CODE BEGIN 1 */
 
 	uint8_t mode3_case = 0;  //模式3状态
+	uint8_t mode4_case = 0;  //模式3状态
 	uint8_t mode6_case = 0;  //模式6状态
 	uint8_t mode7_case = 0;  //模式7状态
-	uint64_t mode8_case = 0;  //模式8状态
+	uint64_t mode8_case = 80;  //模式8状态
 //  uint8_t  adc=READ_HW_OUT_5;
 
   /* USER CODE END 1 */
@@ -334,7 +356,7 @@ int main(void)
   while(READ_HW_OUT_5==1);//等待放药品
   HAL_Delay(1000);
   delay_count = 0;
-  delay_count_start = 1;
+  delay_count_start = 0;
 
 	
 	//delay_count_start=1;//开始计时 
@@ -429,8 +451,8 @@ int main(void)
 		sprintf((char *)OledString,"actual:%.2f  \r\n",yaw);//
 		OLED_ShowString(0,2,OledString,12);//这个是oled驱动里面的，是显示位置的一个函数，
 
-//		motorPidSetSpeed(2,2);
-		trace_logic();
+		motorPidSetSpeed(2,2);
+//		trace_logic();
 	}
 // 
 	if(g_ucMode==2){
@@ -520,11 +542,31 @@ int main(void)
 		//在显示模式电机停转 设置小车速度为0
 	
 //   if(HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_14)==1){
-		 motorPidSetSpeed(2,2);
+		 
 //	 }
 //	  if(HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_14)==0){
 //		 motorPidSetSpeed(0,0);
 //	 }
+switch(mode4_case){
+	case 0:
+		trace_logic();
+	if(trace_ccrossroad() == 1){
+		Mileage=0;
+		mode4_case=1;
+	}break;
+	case 1:
+		trace_logic();
+	if(Mileage>60)
+	{
+		mode4_case=2;
+		
+	}break;
+	case 2:
+        motorPidSetSpeed(0,0);
+    break;
+}
+	
+		
 	
 
 		
@@ -600,6 +642,7 @@ int main(void)
 					{
 						turn_left = 0;
 						mode6_case = 3;
+						speedcar=2;
 					}
 				}
 				break;
@@ -609,6 +652,7 @@ int main(void)
 				{
 					mode6_case = 4;
 					turn_half = 1;
+					speedcar=1.2;
 					
 				}
 				break;
@@ -620,6 +664,7 @@ int main(void)
 					if (MPU6050_turn(180,0) == 1)
 					{
 						turn_half = 0;
+						
 						mode6_case = 5;
 						motorPidSetSpeed(0, 0);
 						HAL_GPIO_WritePin (GPIOB, GPIO_PIN_14, GPIO_PIN_SET);//亮红灯
@@ -904,35 +949,66 @@ if(g_ucMode == 6)
 
 				switch(mode8_case)
 				{
-					case 0:
+					case 80:
 						motorPidSetSpeed(2, 2);
-						mode8_case=1;
+						mode8_case=81;
+					speedcar=2;	
 						break;
 					
-					case 1:
+					case 81:
 											
 					      trace_logic();
-			            if(trace_ccrossroad()==1&&Mileage>150)//跳过第一个十字路口
+			            if(trace_ccrossroad()==1&&Mileage>80)//跳过第一个十字路口
 						{
-						if(k210_turn==0){
-							mode8_case=11;//中端：k210给左判断
-                           turn_left=1; 
-						}
-						
-						else if(k210_turn==1){
-							mode8_case=21;//中端：k210给右判断
-							 turn_right=1;
-				 
-						}						
-						else if(k210_turn==3){
-						mode8_case=3;//远端
+							mode8_case=82;
 							Mileage=0;
-							
+							speedcar=2;
+
 						}
-						else{
-						mode8_case=3;//远端
+						break;
+					case 82:
+						trace_logic();
+						if(Mileage>75)
+						{
+							mode8_case=83;
 						
-						}
+							delay_count_start=1;
+						}break;
+					case 83:
+					  motorPidSetSpeed(0,0);
+					  if(delay_count==100){//停2s
+					  mode8_case=84;
+					  delay_count_start=0;
+					  delay_count=0;					  
+					  }break;
+					case 84:	
+						 motorPidSetSpeed(2,2);
+					mode8_case=85;
+					case 85:
+					
+					trace_logic();
+				
+						if(trace_ccrossroad()==1&&Mileage>80)
+						{
+							lock_position(40);
+							if(k210_turn==0)
+								{
+							speedcar=1.2;	
+							mode8_case=11;//中端：k210给左判断
+							turn_left=1; 
+							}
+							if(k210_turn==1){
+								mode8_case=21;//中端：k210给右判断
+								 turn_right=1;
+								speedcar=1.2;	
+											 
+							}						
+							if(k210_turn==3){
+								mode8_case=30;//远端
+								Mileage=0;
+								speedcar=1.2;
+							}
+
 				        						
 						}					
 					    break;	
@@ -942,10 +1018,12 @@ if(g_ucMode == 6)
 					 /*******************************  中端左边  ******************************************/
 					case 11:
                   if(turn_left==1){
-								if(MPU6050_turn(90,2)==1)
+								if(MPU6050_turn(90,0)==1)
 								{
 									turn_left=0;
-									mode8_case=12;				
+									mode8_case=12;
+                      speedcar=1.2;	
+                  motorPidSetSpeed(1,1);									
 								}}
 								break;
 					case 12:
@@ -1022,11 +1100,13 @@ if(g_ucMode == 6)
 						
 				    /*******************************  中端右边  ******************************************/
 					case 21:
-                              if(turn_right==1){
-								if(MPU6050_turn(-90,2)==1)
+                 if(turn_right==1){
+								if(MPU6050_turn(-90,0)==1)
 								{
 									turn_right=0;
-									mode8_case=22;				
+									mode8_case=22;
+                speedcar=1.2;	
+                   motorPidSetSpeed(1,1);									
 								}}
 								break;
 					case 22:
@@ -1100,49 +1180,131 @@ if(g_ucMode == 6)
 							break;
 
         /*******************************  远端  ******************************************/
-					case 3:
+					case 30:
 					   trace_logic();
 					   if(trace_ccrossroad()==1&&Mileage>50){
-						if(k210_turn==0){
-							mode8_case=31;//远端第一个T字：k210给左判断
+						turn_left = 1;
+						mode8_case = 31;
+							 
+					   }break;
+					case 31:
+					   if (turn_left == 1){
+						if (MPU6050_turn(90,2) == 1)
+								{
+									turn_left = 0;
+									mode8_case = 32;
+									Mileage=0;
+									speedcar=2;
+								}
+
+					   } break;
+					case 32:
+					   trace_logic();
+					   if(Mileage>50){
+				
+						  mode8_case = 33;
+							delay_count_start=1;
+					   }
+
+					case 33:
+					  motorPidSetSpeed(0,0);
+					  if(delay_count==100){//停2s
+					  mode8_case=34;
+					  delay_count_start=0;
+					  delay_count=0;					  
+					  }break;
+					case 34:
+					if(k210_turn==0){//左下
+						trace_logic();
+						if(trace_ccrossroad()==1){
+							mode8_case=3111;
                           turn_left=1; 
 						  k210_turn=3;//清一下k210判断标志
-						}
-						else{
-							mode8_case=32;//远端第一个T字：k210给右判断
+						}}
+					if(k210_turn==1){//左上
+						trace_logic();
+						if(trace_ccrossroad()==1){
+							mode8_case=3112;
                           turn_right=1; 
 						  k210_turn=3;//清一下k210判断标志
-						}
-
-					   }break;
-		 /*******************************  远端左  ******************************************/
-					case 31:
-						if (turn_left == 1)
-						{
-							if (MPU6050_turn(90,2) == 1)
-							{
-								turn_left = 0;
-								mode8_case=311;
-							}
+						}}	
+                    if(k210_turn==3){
+						turn_half = 1;
+						mode8_case=36;
 						}
 						break;
-						case 311:
-								trace_logic();
+					case 36:
+						if (turn_half == 1)
+						{
+
+						if (MPU6050_turn(180,0) == 1)
+						{
+							turn_half = 0;
+							mode8_case = 37;
+				        Mileage=0;
+						}
+
+						}break;
+					case 37:
+					  	 motorPidSetSpeed(1.3, 2);//180转弯会有点偏差
+                        if( Mileage>8){
+							mode8_case = 38;
+						}
+					case 38:
+					trace_logic();
+					if(trace_ccrossroad()==1){
+						Mileage=0;
+						mode8_case = 39;
+					}break;
+					case 39:
+					trace_logic();
+						if(Mileage>50)
+						{
+							mode8_case=40;
+							speedcar=4;
+						}break;
+					case 40:
+                      trace_logic();
+						if(Mileage>90)
+						{
+							mode8_case=41;
+							speedcar=1.2;
+							delay_count_start=1;
+						}break;
+					case 41:
+					  motorPidSetSpeed(0,0);
+					  if(delay_count==100){//停2s
+					  mode8_case=42;
+					  delay_count_start=0;
+					  delay_count=0;					  
+					  }break;
+					case 42:
+					trace_logic();
 						if(trace_ccrossroad()==1){
 							if(k210_turn==0){
-								mode8_case=3111;//远端第二个T字：k210给左判断
+								mode8_case=3211;//远端第二个T字：k210给左判断
 							turn_left=1; 
 							k210_turn=3;//清一下k210判断标志
 							}
 							else{
-								mode8_case=3112;//远端第二个T字：k210给右判断
+								mode8_case=3212;//远端第二个T字：k210给右判断
 							turn_right=1; 
 							k210_turn=3;//清一下k210判断标志
 							}
 
 						}break;
+
+
+
+
+
+
+
+	
+
 		 /*******************************  远端左下  ******************************************/			
 						    case 3111:
+								lock_position(40);
 							if (turn_left == 1)
 								{
 								if (MPU6050_turn(90,2) == 1)
@@ -1249,6 +1411,7 @@ if(g_ucMode == 6)
 										break;
         /*******************************  远端左上  ******************************************/
 								case 3112:
+									lock_position(40);
 							if (turn_right == 1)
 								{
 								if (MPU6050_turn(-90,2) == 1)
@@ -1354,33 +1517,7 @@ if(g_ucMode == 6)
 											}
 										}
 										break;	
-
-		/*******************************  远端右  ******************************************/
-					case 32:
-						if (turn_right == 1)
-						{
-							if (MPU6050_turn(-90,2) == 1)
-							{
-								turn_right = 0;
-								mode8_case=321;
-							}
-						}
-						break;
-						case 321:
-								trace_logic();
-						if(trace_ccrossroad()==1){
-							if(k210_turn==0){
-								mode8_case=3211;//远端第二个T字：k210给左判断
-							turn_left=1; 
-							k210_turn=3;//清一下k210判断标志
-							}
-							else{
-								mode8_case=3212;//远端第二个T字：k210给右判断
-							turn_right=1; 
-							k210_turn=3;//清一下k210判断标志
-							}
-
-						}break;
+						
 		 /*******************************  远端右上  ******************************************/			
 						    case 3211:
 							if (turn_left == 1)
