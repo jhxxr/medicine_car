@@ -49,7 +49,7 @@ short Encode2Count = 0;//电机2编码器计数值 short的类型
 float Motor1Speed = 0.00;//电机1速度 转/s
 float Motor2Speed = 0.00;//电机2速度 转/s
 uint16_t TimerCount = 0;//中断计数变量
-float speedcar=1.2;
+float speedcar=1;
 
 uint16_t delay_count = 0; //延时计数器
 uint8_t delay_count_start=0;

@@ -993,14 +993,14 @@ if(g_ucMode == 6)
 							lock_position(40);
 							if(k210_turn==0)
 								{
-							speedcar=1.2;	
+							speedcar=1;	
 							mode8_case=11;//ÖÐ¶Ë£ºk210¸ø×óÅÐ¶Ï
 							turn_left=1; 
 							}
 							if(k210_turn==1){
 								mode8_case=21;//ÖÐ¶Ë£ºk210¸øÓÒÅÐ¶Ï
 								 turn_right=1;
-								speedcar=1.2;	
+								speedcar=1;	
 											 
 							}						
 							if(k210_turn==3){
@@ -1022,7 +1022,7 @@ if(g_ucMode == 6)
 								{
 									turn_left=0;
 									mode8_case=12;
-                      speedcar=1.2;	
+                      speedcar=1;	
                   motorPidSetSpeed(1,1);									
 								}}
 								break;
@@ -1105,7 +1105,7 @@ if(g_ucMode == 6)
 								{
 									turn_right=0;
 									mode8_case=22;
-                speedcar=1.2;	
+                speedcar=1;	
                    motorPidSetSpeed(1,1);									
 								}}
 								break;
@@ -1243,6 +1243,9 @@ if(g_ucMode == 6)
 					}
 					break; 
 					case 336:
+//						if(k210_turn!=3){
+//							k210_turn=0;
+//						}
 					motorPidSetSpeed(2,2);
                       mode8_case=33;
 					  break; 
@@ -1254,7 +1257,7 @@ if(g_ucMode == 6)
 							lock_position(40);
 							if(k210_turn==0)
 								{
-							speedcar=1.2;	
+							speedcar=1;	
 							mode8_case=300;//Ô¶¶Ë£ºk210¸ø×óÅÐ¶Ï
 							turn_left=1;
 							k210_turn=3; 
@@ -1262,7 +1265,7 @@ if(g_ucMode == 6)
 							else{
 								mode8_case=310;//Ô¶¶Ë£ºk210¸øÓÒÅÐ¶Ï
 								 turn_right=1;
-								speedcar=1.2;
+								speedcar=1;
 								k210_turn=3; 	
 											 
 							    }												        						
@@ -1277,9 +1280,10 @@ if(g_ucMode == 6)
 
 					case 300:
 					   if (turn_left == 1){
-						if (MPU6050_turn(90,2) == 1)
+						if (MPU6050_turn(90,0) == 1)
 								{
 									turn_left = 0;
+									motorPidSetSpeed(2,2);
 									mode8_case = 301;
 									Mileage=0;
 									speedcar=2;
@@ -1310,9 +1314,10 @@ if(g_ucMode == 6)
 						if(trace_ccrossroad()==1)
 						{
 							lock_position(40);
+							
 							if(k210_turn==0)
 							{
-							speedcar=1.2;	
+							speedcar=1;	
 							mode8_case=3111;//ÖÐ¶Ë£ºk210¸ø×óÅÐ¶Ï
 							turn_left=1; 
 							}
@@ -1320,7 +1325,7 @@ if(g_ucMode == 6)
 							{
 								mode8_case=3112;//ÖÐ¶Ë£ºk210¸øÓÒÅÐ¶Ï
 								 turn_right=1;
-								speedcar=1.2;	
+								speedcar=1;	
 											 
 							}						
 										        						
@@ -1331,9 +1336,10 @@ if(g_ucMode == 6)
 
 					case 310:
 					   if (turn_right == 1){
-						if (MPU6050_turn(-90,2) == 1)
+						if (MPU6050_turn(-90,0) == 1)
 								{
 									turn_right = 0;
+									motorPidSetSpeed(2,2);
 									mode8_case = 311;
 									Mileage=0;
 									speedcar=2;
@@ -1397,6 +1403,7 @@ if(g_ucMode == 6)
 								{
 									turn_left = 0;
 									mode8_case = 31110;
+									motorPidSetSpeed(2,2);
 								}
 								}
 								break;
@@ -1504,6 +1511,7 @@ if(g_ucMode == 6)
 								{
 									turn_right = 0;
 									mode8_case = 31120;
+									motorPidSetSpeed(2,2);
 								}
 								}
 								break;
@@ -1612,6 +1620,7 @@ if(g_ucMode == 6)
 								{
 									turn_left = 0;
 									mode8_case = 32110;
+									motorPidSetSpeed(2,2);
 								}
 								}
 								break;
@@ -1718,6 +1727,7 @@ if(g_ucMode == 6)
 								{
 									turn_right = 0;
 									mode8_case = 32120;
+									motorPidSetSpeed(2,2);
 								}
 								}
 								break;
