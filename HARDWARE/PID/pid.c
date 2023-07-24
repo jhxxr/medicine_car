@@ -32,7 +32,7 @@ void PID_init()
 	pidHW_Tracking.err = 0.0;
 	pidHW_Tracking.err_last = 0.0;
 	pidHW_Tracking.err_sum = 0.0;
-	pidHW_Tracking.Kp = -1.40;
+	pidHW_Tracking.Kp = -1.43;
 	pidHW_Tracking.Ki = 0;
 	pidHW_Tracking.Kd = 1.49;
 
@@ -50,9 +50,9 @@ void PID_init()
 	pidMPU6050YawMovement.err = 0.0;
 	pidMPU6050YawMovement.err_last = 0.0;
 	pidMPU6050YawMovement.err_sum = 0.0;
-	pidMPU6050YawMovement.Kp = 0.02; // 6050航向角PID运动控制
+	pidMPU6050YawMovement.Kp = 0.0295; // 6050航向角PID运动控制
 	pidMPU6050YawMovement.Ki = 0;
-	pidMPU6050YawMovement.Kd = 0.1;
+	pidMPU6050YawMovement.Kd = 0.4;
 }
 // 比例p调节控制函数
 float P_realize(tPid *pid, float actual_val)
